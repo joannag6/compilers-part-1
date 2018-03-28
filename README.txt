@@ -1,12 +1,20 @@
-README:
+TODO:
+1. Parsers to create AST
+	- Create parser for empty statement. 
 
-===============================================================================
-MAKEFILE
+
+2. Creating CST
+
+3. Pretty printing
+
+
+===========================================================================
+RANDOM TIPS
+1. MAKEFILE
 made a basic makefile to run the program, type make. 
 Makefile needs to be ammended for submission. 
 
-===============================================================================
-CUSTOM DATA TYPES: 
+2. CUSTOM DATA TYPES: 
 concerning custom data types, there are two ways to do it here. 
 type ASTTypeDenoter = TypeDenoter
 data TypeDenoter =
@@ -29,7 +37,12 @@ data Sign =
 parseTokenPlus
 return SignPlus
 
-===============================================================================
-PARSERS NOT DIRECTLY TAKEN FROM BNF. 
+
+3. PARSERS NOT DIRECTLY TAKEN FROM BNF. 
 type ASTAssignmentStatementHead was added by me, not directly translated from BNF. 
+
+4. When PazParserBNF open in your code editor, set the language to Haskell for relatively useful highlighting.
+
+===========================================================================
+
 Helped me to implement parser for parseAssignmentStatement. 
