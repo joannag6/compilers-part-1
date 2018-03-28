@@ -44,9 +44,8 @@ return SignPlus
 
 3. PARSERS NOT DIRECTLY TAKEN FROM BNF. 
 type ASTAssignmentStatementHead was added by me, not directly translated from BNF. 
+Helped me to implement parser for parseAssignmentStatement. 
 
 4. When PazParserBNF open in your code editor, set the language to Haskell for relatively useful highlighting.
 
 ===========================================================================
-
-Helped me to implement parser for parseAssignmentStatement. 
