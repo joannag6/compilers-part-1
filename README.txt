@@ -6,7 +6,7 @@ TODO:
 	  just by using BNF notation. Need to find a way to implement it.
 	- Currently to run it, we type make to build everything. Then we type PazParserTest <pazprogramname.paz.
 	  Need to find a way to change this to match the spec. 
-	  - sort.paz fails. fact.paz failes.
+	  - fact.paz is the only test from examples provided that still fails. 
 
 2. Creating CST
 
