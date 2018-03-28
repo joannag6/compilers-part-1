@@ -1,18 +1,11 @@
-program hello;
-
-begin
-        writeln('Hello, world!')
-end.
-
-
-do variable_access
-then do factor
-
-
 README:
+===============================================================================
+MAKEFILE
 made a basic makefile to run the program, type make. 
+Makefile needs to be ammended for submission. 
 
-
+===============================================================================
+CUSTOM DATA TYPES: 
 concerning custom data types, there are two ways to do it here. 
 type ASTTypeDenoter = TypeDenoter
 data TypeDenoter =
@@ -34,3 +27,8 @@ data Sign =
 
 parseTokenPlus
 return SignPlus
+
+===============================================================================
+PARSERS NOT DIRECTLY TAKEN FROM BNF. 
+type ASTAssignmentStatementHead was added by me, not directly translated from BNF. 
+Helped me to implement parser for parseAssignmentStatement. 
