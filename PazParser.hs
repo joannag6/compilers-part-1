@@ -652,14 +652,83 @@ parseProcedureDeclarationPart =
 --  | empty_statement     -- must go at the end. 
 type ASTStatement = Statement
 data Statement = 
-    AssignmentStatementStatement ASTAssignmentStatement |
-    ProcedureStatementStatement ASTProcedureStatement |
-    CompoundStatementStatement ASTCompoundStatement |
-    IfStatementStatement ASTIfStatement |
-    WhileStatementStatement ASTWhileStatement |
-    ForStatementStatement ASTForStatement 
+    NonEmptyStatementStatement ASTNonEmptyStatement |
+    EmptyStatementStatement ASTEmptyStatement
     deriving(Show)
 
+--TODO fix these random hacks used to make empty statement parser lol
+type ASTNonEmptyStatement = NonEmptyStatement
+data NonEmptyStatement = 
+    AssignmentStatementNEStatement ASTAssignmentStatement |
+    ProcedureStatementNEStatement ASTProcedureStatement |
+    CompoundStatementNEStatement ASTCompoundStatement |
+    IfStatementNEStatement ASTIfStatement |
+    WhileStatementNEStatement ASTWhileStatement |
+    ForStatementNEStatement ASTForStatement
+    deriving(Show)
+
+parseNonEmptyStatement :: Parser ASTNonEmptyStatement
+parseNonEmptyStatement =
+    trace
+        "parseNonEmptyStatement"
+        (
+            choice
+                    [
+                        try (
+                            do
+                                x <-
+                                    parseAssignmentStatement
+                                return (AssignmentStatementNEStatement x)
+                            ),
+                        try (
+                            do
+                                x <-
+                                    parseProcedureStatement
+                                return (ProcedureStatementNEStatement x)
+                            ),
+                        try (
+                            do
+                                x <-
+                                    parseCompoundStatement
+                                return (CompoundStatementNEStatement x)
+                            ),
+                        try (
+                            do
+                                x <-
+                                    parseIfStatement
+                                return (IfStatementNEStatement x)
+                            ),
+                        try (
+                            do
+                                x <-
+                                    parseWhileStatement
+                                return (WhileStatementNEStatement x)
+                            ),
+                        
+                        do
+                            x <-
+                                parseForStatement
+                            return (ForStatementNEStatement x)
+                        ]
+        )
+
+type ASTEmptyStatement = (Maybe NonEmptyStatement) 
+
+parseEmptyStatement :: Parser ASTEmptyStatement
+parseEmptyStatement =
+    trace
+        "parseEmptyStatement"
+        (
+            optionMaybe (
+                try (
+                    do
+                        x0 <-
+                            parseNonEmptyStatement
+                        return x0
+                        
+                    )
+                )
+            )
 
 parseStatement :: Parser ASTStatement
 parseStatement =
@@ -671,38 +740,13 @@ parseStatement =
                         try (
                             do
                                 x <-
-                                    parseAssignmentStatement
-                                return (AssignmentStatementStatement x)
+                                    parseNonEmptyStatement
+                                return (NonEmptyStatementStatement x)
                             ),
-                        try (
-                            do
-                                x <-
-                                    parseProcedureStatement
-                                return (ProcedureStatementStatement x)
-                            ),
-                        try (
-                            do
-                                x <-
-                                    parseCompoundStatement
-                                return (CompoundStatementStatement x)
-                            ),
-                        try (
-                            do
-                                x <-
-                                    parseIfStatement
-                                return (IfStatementStatement x)
-                            ),
-                        try (
-                            do
-                                x <-
-                                    parseWhileStatement
-                                return (WhileStatementStatement x)
-                            ),
-                        
                         do
                             x <-
-                                parseForStatement
-                            return (ForStatementStatement x)
+                                parseEmptyStatement
+                            return (EmptyStatementStatement x)    
                         ]
         )
 
