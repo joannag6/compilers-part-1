@@ -47,35 +47,43 @@ empty_statement
     :
     ;
 
+-- Implemented.
 assignment_statement
     : (variable_access | identifier) ASSIGN expression
     ;
 
 -- this means the call to a procedure
+-- Implemented
 procedure_statement
     : identifier [actual_parameter_list]
     ;
 
+-- Implemented.
 actual_parameter_list
     : LEFT_PARENTHESIS expression {COMMA expression} RIGHT_PARENTHESIS
     ;
 
+-- Implemented
 compound_statement
     : BEGIN statement_sequence END
     ;
 
+-- implemented
 statement_sequence
     : statement {SEMICOLON statement}
     ;
 
+-- implemented
 if_statement
     : IF expression THEN statement [ELSE statement]
     ;
 
+-- implemented
 while_statement
     : WHILE expression DO statement
     ;
 
+-- Implemented
 for_statement
     : FOR identifier ASSIGN expression (TO | DOWN_TO) expression DO statement
     ;
