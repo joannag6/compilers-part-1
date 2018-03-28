@@ -657,9 +657,9 @@ data Statement =
     CompoundStatementStatement ASTCompoundStatement |
     IfStatementStatement ASTIfStatement |
     WhileStatementStatement ASTWhileStatement |
-    ForStatementStatement ASTForStatement
+    ForStatementStatement ASTForStatement 
     deriving(Show)
- 
+
 
 parseStatement :: Parser ASTStatement
 parseStatement =
@@ -698,12 +698,14 @@ parseStatement =
                                     parseWhileStatement
                                 return (WhileStatementStatement x)
                             ),
+                        
                         do
                             x <-
                                 parseForStatement
                             return (ForStatementStatement x)
                         ]
         )
+
 
 -- Corresponds to assignment_statement
 -- assignment_statement : (variable_access | identifier ) ASSIGN expression
@@ -1175,7 +1177,7 @@ parseFactor =
                             return (ExpressionFactor x)
                         ),
                     do
-                        -- check this as well. 
+                        parseTokenNot 
                         x <- parseFactor
                         return (FactorFactor x) 
                     ]
@@ -1281,10 +1283,10 @@ parseIndexedVariable =
             do
                 x0 <- 
                     parseIdentifier
-                parseTokenLeftParenthesis
+                parseTokenLeftBracket
                 x1 <-
                     parseExpression
-                parseTokenRightParenthesis 
+                parseTokenRightBracket
                 return (x0,x1)
         )
 
