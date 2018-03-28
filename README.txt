@@ -1,8 +1,9 @@
 TODO:
 1. Parsers to create AST
-	- procedure_statement, empty_statement and identifier under variable_access
+	- procedure_statement and identifier under variable_access
 	  have special rules in the comment of PazParserBNF.txt that cannot be described 
-	  just by using BNF notation. Need to find a way to implement it.
+	  just by using BNF notation. Figure out if changes are necessary to implement those commented rules, and if so, implement
+	  them. 
 	- Currently to run it, we type make to build everything. Then we type PazParserTest <pazprogramname.paz.
 	  Need to find a way to change this to match the spec. 
 
