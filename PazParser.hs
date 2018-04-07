@@ -640,6 +640,48 @@ parseProcedureDeclarationPart =
 ----------------------------------------------------------------------------
 -- your code starts here
 
+-- Corresponds to compound_statement.
+--compound_statement
+--    : BEGIN statement_sequence END
+type ASTCompoundStatement = (ASTStatementSequence)
+parseCompoundStatement :: Parser ASTCompoundStatement
+parseCompoundStatement =
+    trace
+        "parseCompoundStatement"
+        (
+            do
+                parseTokenBegin
+                x <- parseStatementSequence
+                parseTokenEnd
+                return x
+            )
+
+
+-- Corresponds to statement_sequence
+--statement_sequence
+--    : statement {SEMICOLON statement}
+type ASTStatementSequence = (ASTStatement, [ASTStatement])
+parseStatementSequence :: Parser ASTStatementSequence
+parseStatementSequence = 
+    trace
+        "parseStatementSequence"
+        (
+            do
+                x0 <- parseStatement
+                x1 <-
+                    many
+                    (
+                        try
+                        (
+                            do
+                                parseTokenSemicolon
+                                x2 <- parseStatement
+                                return x2
+                        )
+                    )
+                return (x0,x1)
+        )
+
 --corresponds to statement in PazParserBNF.txt
 -- TODO: Needs empty statement.
 -- statement
@@ -652,145 +694,84 @@ parseProcedureDeclarationPart =
 --  | empty_statement     -- must go at the end. 
 type ASTStatement = Statement
 data Statement = 
-    NonEmptyStatementStatement ASTNonEmptyStatement |
-    EmptyStatementStatement ASTEmptyStatement
+    AssignmentStatement ASTAssignmentStatement |
+    ProcedureStatement ASTProcedureStatement |
+    CompoundStatement ASTCompoundStatement |
+    IfStatement ASTIfStatement |
+    WhileStatement ASTWhileStatement |
+    ForStatement ASTForStatement |
+    EmptyStatement
     deriving(Show)
-
---TODO fix these random hacks used to make empty statement parser lol
-type ASTNonEmptyStatement = NonEmptyStatement
-data NonEmptyStatement = 
-    AssignmentStatementNEStatement ASTAssignmentStatement |
-    ProcedureStatementNEStatement ASTProcedureStatement |
-    CompoundStatementNEStatement ASTCompoundStatement |
-    IfStatementNEStatement ASTIfStatement |
-    WhileStatementNEStatement ASTWhileStatement |
-    ForStatementNEStatement ASTForStatement
-    deriving(Show)
-
-parseNonEmptyStatement :: Parser ASTNonEmptyStatement
-parseNonEmptyStatement =
-    trace
-        "parseNonEmptyStatement"
-        (
-            choice
-                    [
-                        try (
-                            do
-                                x <-
-                                    parseAssignmentStatement
-                                return (AssignmentStatementNEStatement x)
-                            ),
-                        try (
-                            do
-                                x <-
-                                    parseProcedureStatement
-                                return (ProcedureStatementNEStatement x)
-                            ),
-                        try (
-                            do
-                                x <-
-                                    parseCompoundStatement
-                                return (CompoundStatementNEStatement x)
-                            ),
-                        try (
-                            do
-                                x <-
-                                    parseIfStatement
-                                return (IfStatementNEStatement x)
-                            ),
-                        try (
-                            do
-                                x <-
-                                    parseWhileStatement
-                                return (WhileStatementNEStatement x)
-                            ),
-                        
-                        do
-                            x <-
-                                parseForStatement
-                            return (ForStatementNEStatement x)
-                        ]
-        )
-
-type ASTEmptyStatement = (Maybe NonEmptyStatement) 
-
-parseEmptyStatement :: Parser ASTEmptyStatement
-parseEmptyStatement =
-    trace
-        "parseEmptyStatement"
-        (
-            optionMaybe (
-                try (
-                    do
-                        x0 <-
-                            parseNonEmptyStatement
-                        return x0
-                        
-                    )
-                )
-            )
-
+    
 parseStatement :: Parser ASTStatement
-parseStatement =
+parseStatement = 
     trace
         "parseStatement"
         (
             choice
-                    [
-                        try (
-                            do
-                                x <-
-                                    parseNonEmptyStatement
-                                return (NonEmptyStatementStatement x)
-                            ),
-                        do
-                            x <-
-                                parseEmptyStatement
-                            return (EmptyStatementStatement x)    
-                        ]
+            [
+                try(
+                    do
+                        x <- parseAssignmentStatement
+                        return (AssignmentStatement x)
+                ),
+                try(
+                    do
+                        x <- parseProcedureStatement
+                        return (ProcedureStatement x)
+                ),
+                try(
+                    do
+                        x <- parseCompoundStatement
+                        return (CompoundStatement x)
+                ),
+                try(
+                    do
+                        x <- parseIfStatement
+                        return (IfStatement x)
+                ),
+                try(
+                    do
+                        x <- parseWhileStatement
+                        return (WhileStatement x)
+                ),
+                try(
+                    do
+                        x <- parseForStatement
+                        return (ForStatement x)
+                ),
+                do
+                    return EmptyStatement
+            ]
+                
         )
-
-
--- Corresponds to assignment_statement
--- assignment_statement : (variable_access | identifier ) ASSIGN expression
-type ASTAssignmentStatement = (ASTAssignmentStatementHead, ASTExpression) 
+    
+type ASTAssignmentStatement = (Variable, ASTExpression)
+data Variable = 
+    VariableAcessAssignmentStatement ASTVariableAccess |
+    IdentifierAssignmentStatement ASTIdentifier
+    deriving(Show)
 parseAssignmentStatement :: Parser ASTAssignmentStatement
-parseAssignmentStatement =
+parseAssignmentStatement = 
     trace
         "parseAssignmentStatement"
         (
             do
-                x0<-parseAssignmentStatementHead
-                parseTokenAssign
-                x1<-parseExpression
-                return(x0,x1)
-        )
-
--- TODO: i wrote this extra type to help me create the parser for assigment_statement
--- there probably is a way to make assigment_statment parser work without this
--- ugly thing here. 
-type ASTAssignmentStatementHead = AssignmentStatementHead 
-data AssignmentStatementHead = 
-    VariableAccessASH ASTVariableAccess |
-    IdentifierASH ASTIdentifier
-    deriving(Show)
-parseAssignmentStatementHead :: Parser ASTAssignmentStatementHead
-parseAssignmentStatementHead = 
-    trace
-        "parseAssignmentStatementHead"
-        (
-            choice
-                [
-                    try
-                    (
+                x0 <- 
+                    choice
+                    [
+                        try (
+                                do
+                                    x <- parseVariableAccess
+                                    return (VariableAcessAssignmentStatement x)
+                            ),
                         do
-                            x<-parseVariableAccess
-                            return (VariableAccessASH x)
-                    ),
-                do
-                    x<-parseIdentifier
-                    return (IdentifierASH x)
-                ]
+                            x <- parseIdentifier
+                            return (IdentifierAssignmentStatement x)
+                        ]
+                parseTokenAssign
+                x1 <- parseExpression
+                return (x0, x1)
         )
 
 -- Correpsonds to procedure_statement
@@ -818,7 +799,7 @@ parseProcedureStatement =
 -- Corresponds to actual_parameter_list
 --actual_parameter_list
 --    : LEFT_PARENTHESIS expression {COMMA expression} RIGHT_PARENTHESIS
-type ASTActualParameterList = (ASTExpression, [ASTExpression])
+type ASTActualParameterList = [ASTExpression]
 parseActualParameterList :: Parser ASTActualParameterList
 parseActualParameterList = 
     trace 
@@ -839,49 +820,8 @@ parseActualParameterList =
                         )
                     )
                 parseTokenRightParenthesis
-                return (x0,x1)
+                return (x0:x1)
         ) 
-
--- Corresponds to compound_statement.
---compound_statement
---    : BEGIN statement_sequence END
-type ASTCompoundStatement = (ASTStatementSequence)
-parseCompoundStatement :: Parser ASTCompoundStatement
-parseCompoundStatement =
-    trace
-        "parseCompoundStatement"
-        (
-            do
-                parseTokenBegin
-                x <- parseStatementSequence
-                parseTokenEnd
-                return x
-            )
-
--- Corresponds to statement_sequence
---statement_sequence
---    : statement {SEMICOLON statement}
-type ASTStatementSequence = (ASTStatement, [ASTStatement])
-parseStatementSequence :: Parser ASTStatementSequence
-parseStatementSequence = 
-    trace
-        "parseStatementSequence"
-        (
-            do
-                x0 <- parseStatement
-                x1 <-
-                    many
-                    (
-                        try
-                        (
-                            do
-                                parseTokenSemicolon
-                                x2 <- parseStatement
-                                return x2
-                        )
-                    )
-                return (x0,x1)
-        )
 
 -- Corresponds to if_statement.
 --if_statement
@@ -909,7 +849,7 @@ parseIfStatement =
                     )
                 return (x0,x1,x2)
         )
-
+      
 -- Corresponds to while_statement
 -- while_statement
 --    : WHILE expression DO statement
@@ -926,7 +866,7 @@ parseWhileStatement =
                 x1 <- parseStatement
                 return (x0,x1)
         )
-
+        
 -- Corresponds to for_statement.
 -- FOR identifier ASSIGN expression (TO|DOWN_TO) expression DO statement
 type ASTForStatement = (ASTIdentifier, ASTExpression, ASTExpression, ASTStatement)
@@ -1054,9 +994,8 @@ parseSimpleExpression =
                         try
                         (
                             do
-                            
-                                parseSign
-                            
+                                x <- parseSign
+                                return x
                         )
                     )
                 x1 <- parseTerm
@@ -1102,7 +1041,7 @@ parseAddingOperator =
                     try (
                         do
                             parseTokenMinus
-                            return AddOpPlus
+                            return AddOpMinus
                         ),
                     
                     do
@@ -1261,8 +1200,8 @@ parseUnsignedConstant =
 --    ;
 type ASTUnsignedNumber = UnsignedNumber
 data UnsignedNumber =
-    UnsignedIntegerNumber ASTUnsignedInteger |
-    UnsignedIntegerReal ASTUnsignedReal
+    UnsignedInteger Int |
+    UnsignedReal ASTUnsignedReal
     deriving(Show)
 
 -- Correpsonds to unsigned number.
@@ -1276,11 +1215,11 @@ parseUnsignedNumber =
                     try (
                         do
                             x <- parseUnsignedInteger
-                            return (UnsignedIntegerNumber x)
+                            return (UnsignedInteger (read x :: Int))
                         ),
                     do
                         x <- parseUnsignedReal
-                        return (UnsignedIntegerReal x)
+                        return (UnsignedReal x)
                     ]
             )
 
@@ -1363,7 +1302,7 @@ parseProcedureDeclaration =
                 return (x0, x1, x2, x3)
             )
 
-type ASTFormalParameterList = (ASTFormalParameterSection, [ASTFormalParameterSection])
+type ASTFormalParameterList = [ASTFormalParameterSection]
 parseFormalParameterList :: Parser ASTFormalParameterList
 parseFormalParameterList =
     trace
@@ -1384,7 +1323,7 @@ parseFormalParameterList =
                             )
                         )
                 parseTokenRightParenthesis
-                return (x0, x1)
+                return (x0: x1)
             )
 
 -- presence of "var" keyword should have type "Maybe ()" according to the
@@ -1437,7 +1376,7 @@ parseIdentifierList =
                 return (x0, x1)
             )
 
-type ASTVariableDeclarationPart = (Maybe (ASTVariableDeclaration, [ASTVariableDeclaration]))
+type ASTVariableDeclarationPart = (Maybe ([ASTVariableDeclaration]))
 parseVariableDeclarationPart :: Parser ASTVariableDeclarationPart
 parseVariableDeclarationPart =
     trace
@@ -1460,7 +1399,7 @@ parseVariableDeclarationPart =
                                         return x0
                                     )
                                 )
-                        return (x0, x1)
+                        return (x0: x1)
                     )
                 )
             )
