@@ -1,5 +1,0 @@
-program hype;
-
-begin 
-	result := 1
-end.
