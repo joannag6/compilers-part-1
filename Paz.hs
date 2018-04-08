@@ -21,7 +21,7 @@ main = do
                 exitWith (ExitFailure 1)
         ["-p", a] -> doParsing a
         otherwise -> do 
-                        putStrLn ("Usage: " ++ progname ++ " [-p] filename\n\n")
+                        putStrLn ("Usage: " ++ progname ++ " [-p] sourcefile")
                         exitWith (ExitFailure 1)
     
 doParsing :: String -> IO ()

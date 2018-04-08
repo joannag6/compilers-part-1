@@ -933,12 +933,12 @@ parseExpression =
 --    ;
 type ASTRelationalOperator = RelationalOperator
 data RelationalOperator =
-    RelationOpEqual |
-    RelationOpNotEqual |
-    RelationOpLessThan |
-    RelationOpGreaterThan |
-    RelationOpLessThanOrEqual |
-    RelationOpGreaterThanOrEqual
+    ROEqual |
+    RONotEqual |
+    ROLessThan |
+    ROGreaterThan |
+    ROLessThanOrEqual |
+    ROGreaterThanOrEqual
     deriving(Show)
 parseRelationalOperator :: Parser ASTRelationalOperator
 parseRelationalOperator =
@@ -950,31 +950,31 @@ parseRelationalOperator =
                     try (
                         do
                             parseTokenEqual
-                            return RelationOpEqual
+                            return ROEqual
                         ),
                     try (
                         do
                             parseTokenNotEqual
-                            return RelationOpNotEqual
+                            return RONotEqual
                         ),
                     try (
                         do
                             parseTokenLessThan
-                            return RelationOpLessThan
+                            return ROLessThan
                         ),
                     try (
                         do
                             parseTokenGreaterThan
-                            return RelationOpGreaterThan
+                            return ROGreaterThan
                         ),
                     try (
                         do
                             parseTokenLessThanOrEqual
-                            return RelationOpLessThanOrEqual
+                            return ROLessThanOrEqual
                         ),
                     do
                         parseTokenGreaterThanOrEqual
-                        return RelationOpGreaterThanOrEqual
+                        return ROGreaterThanOrEqual
                     ]
             )
 
