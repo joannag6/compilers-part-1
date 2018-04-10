@@ -6,6 +6,8 @@ import System.IO (hPutStrLn, stderr)
 import System.Exit (exitFailure, exitWith, ExitCode(..))
 import System.Environment
 
+import Text.Printf
+
 die :: String -> IO ()
 die err = do
     hPutStrLn stderr err
@@ -20,10 +22,10 @@ main = do
                 putStrLn "Sorry, cannot generate code yet"
                 exitWith (ExitFailure 1)
         ["-p", a] -> doParsing a
-        otherwise -> do 
+        otherwise -> do
                         putStrLn ("Usage: " ++ progname ++ " [-p] sourcefile")
                         exitWith (ExitFailure 1)
-    
+
 doParsing :: String -> IO ()
 doParsing filename = do
     input <- readFile (filename)
@@ -46,6 +48,37 @@ doParsing filename = do
                     --putStrLn (show ast)
                     prettyPrint ast
 
-prettyPrint :: PazParser.ASTStartSymbol -> IO ()
-prettyPrint ast = putStrLn "I'm a placeholder"
+--------------------------------------------------------------------------------
+----------------------------------------------------------------------------
+prettyPrintIdentifierList :: PazParser.ASTIdentifierList -> IO ()
+prettyPrintIdentifierList ()
 
+prettyPrintVariableDec :: PazParser.ASTVariableDeclaration -> IO ()
+prettyPrintVariableDec (identifiers, types) = do
+  printf "    %s: %s;\n" (show identifiers) (show identifiers)
+
+prettyPrintVariableDecList :: [PazParser.ASTVariableDeclaration] -> IO ()
+prettyPrintVariableDecList [] = return () -- do nothing
+prettyPrintVariableDecList (v:vs) = do
+  prettyPrintVariableDec v
+  prettyPrintVariableDecList vs
+
+prettyPrintVariableDecPart :: PazParser.ASTVariableDeclarationPart -> IO ()
+prettyPrintVariableDecPart Nothing = return () -- do nothing
+prettyPrintVariableDecPart (Just variables) = do
+  printf "var\n"
+  prettyPrintVariableDecList variables
+
+prettyPrint :: PazParser.ASTStartSymbol -> IO ()
+-- mapping ASTs to Paz programs.
+
+-- ASTVariableDeclarationPart, ASTProcedureDeclarationPart, ASTCompoundStatement
+-- prettyPrint ast = putStrLn "I'm a placeholder" -- TODO(joanna): put pretty printing here
+prettyPrint (programname, variables, procedures, compound) = do
+  printf "program %s;" programname
+  putStr "\n\n"
+
+  -- can print ASTIdentifier,
+  prettyPrintVariableDecPart variables -- can be Nothing or list of ((ASTIdentifier, [ASTIdentifier]), ASTTypeDenoter -- array or normal type)
+  print procedures
+  print compound
