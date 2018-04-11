@@ -776,7 +776,7 @@ parseAssignmentStatement =
 
 -- Correpsonds to procedure_statement
 -- procedure_statement : identifier [actual_parameter list]
-type ASTProcedureStatement = (ASTIdentifier, Maybe ASTActualParameterList )
+type ASTProcedureStatement = (ASTIdentifier, Maybe ASTActualParameterList)
 parseProcedureStatement :: Parser ASTProcedureStatement
 parseProcedureStatement =
     trace

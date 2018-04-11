@@ -111,16 +111,20 @@ ppParamSection :: PazParser.ASTFormalParameterSection -> String
 ppParamSection (False, idlist, td) = (ppIdentifierList idlist) ++ ": " ++ (ppTypeDenoter td)
 ppParamSection (True, idlist, td) = "var " ++ (ppIdentifierList idlist) ++ ": " ++ (ppTypeDenoter td)
 
-ppParamList :: PazParser.ASTFormalParameterList -> String
-ppParamList [] = ""
-ppParamList [x] = (ppParamSection x)
-ppParamList (x:xs) = (ppParamSection x) ++ "; " ++ (ppParamList xs)
+ppFormalParamList :: PazParser.ASTFormalParameterList -> String
+ppFormalParamList [] = ""
+ppFormalParamList [x] = (ppParamSection x)
+ppFormalParamList (x:xs) = (ppParamSection x) ++ "; " ++ (ppFormalParamList xs)
 
 ppProcedureDec :: PazParser.ASTProcedureDeclaration -> IO ()
 ppProcedureDec (ident, (Nothing), vardecpart, compound) = do
   printf ((ppIdentifier ident) ++ ";\n")
+  ppVariableDecPart vardecpart
+  ppCompound compound
 ppProcedureDec (ident, (Just paramlist), vardecpart, compound) = do
-  printf ((ppIdentifier ident) ++ "(" ++ (ppParamList paramlist) ++ ");\n")
+  printf ((ppIdentifier ident) ++ "(" ++ (ppFormalParamList paramlist) ++ ");\n")
+  ppVariableDecPart vardecpart
+  ppCompound compound
 
 
 ppProcedureDecPart :: [PazParser.ASTProcedureDeclaration] -> IO ()
@@ -134,13 +138,88 @@ ppProcedureDecPart (p:ps) = do
 --------------------------------------------------------------------------------
 -- ASTCompoundStatement
 --------------------------------------------------------------------------------
+ppExpression :: PazParser.ASTExpression -> IO ()
+ppExpression _ = putStr "Expression"
 
+-- [ASTExpression]
+ppActualParamList :: PazParser.ASTActualParameterList -> IO ()
+ppActualParamList [] = return ()
+ppActualParamList [x] = ppExpression x
+ppActualParamList (x:xs) = do
+  ppExpression x
+  putStr ", "
+  ppActualParamList xs
 
+-- (ASTIdentifier, ASTExpression)
+ppIndexedVariable :: PazParser.ASTIndexedVariable -> IO ()
+ppIndexedVariable (ident, expression) = do
+  putStr (ppIdentifier ident)
+  ppExpression expression
+
+ppVariableAccess :: PazParser.ASTVariableAccess -> IO ()
+ppVariableAccess v =
+  case v of
+    IndexedVariableVariableAccess va -> ppIndexedVariable va
+    IdenfierVariableAccess i -> putStr (ppIdentifier i)
+
+-- (ASTIdentifier, Maybe ASTActualParameterList )
+ppProcedureStmt :: PazParser.ASTProcedureStatement -> IO ()
+ppProcedureStmt (i, Nothing) = do
+  putStr (ppIdentifier i)
+ppProcedureStmt (i, (Just params)) = do
+  putStr (ppIdentifier i)
+  ppActualParamList params
+
+-- (Variable, ASTExpression) -- Variable only used in this statement
+ppAssignmentStmt :: PazParser.ASTAssignmentStatement -> IO ()
+ppAssignmentStmt (variable, expression) = do
+  case variable of
+    VariableAcessAssignmentStatement va ->  ppVariableAccess va
+    IdentifierAssignmentStatement i -> putStr (ppIdentifier i)
+  ppExpression expression
+
+-- (ASTExpression, ASTStatement, (Maybe ASTStatement))
+ppIfStmt :: PazParser.ASTIfStatement -> IO ()
+ppIfStmt (expression, thenstmt, (Nothing)) = do
+  putStr "if "
+  ppExpression expression
+  putStr " then\n"
+  ppStatement thenstmt
+ppIfStmt (expression, thenstmt, (Just elsestmt)) = do
+  putStr "if "
+  ppExpression expression
+  putStr " then\n    " --TODO() handle indents
+  ppStatement thenstmt
+  putStr "\nelse\n    "
+  ppStatement elsestmt
+
+ppStatement :: PazParser.ASTStatement -> IO ()
+ppStatement s =
+  case s of
+    AssignmentStatement as -> ppAssignmentStmt as
+    ProcedureStatement ps -> ppProcedureStmt ps
+    CompoundStatement cs -> ppCompound cs
+    IfStatement is -> ppIfStmt is
+    WhileStatement ws -> return () -- TODO()
+    ForStatement fs -> return () -- TODO()
+    EmptyStatement -> putStr ";\n"
+
+-- (ASTStatement, [ASTStatement])
+ppStatementSequence :: PazParser.ASTStatementSequence -> IO ()
+ppStatementSequence (statement, []) = ppStatement statement
+ppStatementSequence (statement, (x:xs)) = do
+  ppStatement statement
+  ppStatementSequence (x, xs)
+
+-- (ASTStatementSequence)
 ppCompound :: PazParser.ASTCompoundStatement -> IO ()
 ppCompound (c) = do
   putStr "begin\n" -- check ordering !! only used in Compound Statements
-  print c
-  putStr "end\n\n" -- check ordering !! only used in Compound Statements
+  ppStatementSequence c
+  putStr "\nend\n" -- check ordering !! only used in Compound Statements
+
+-- TODO TODO TODO punctuation after end. or end; or just end
+-- TODO TODO TODO indents and new lines
 
 --------------------------------------------------------------------------------
 -- Top level pretty print
