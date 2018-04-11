@@ -49,26 +49,100 @@ doParsing filename = do
                     prettyPrint ast
 
 --------------------------------------------------------------------------------
-----------------------------------------------------------------------------
-prettyPrintIdentifierList :: PazParser.ASTIdentifierList -> IO ()
-prettyPrintIdentifierList ()
+-- ASTVariableDeclarationPart
+--------------------------------------------------------------------------------
+ppSign :: PazParser.ASTSign -> String
+ppSign s =
+  case s of
+    PazParser.SignPlus -> "+"
+    PazParser.SignMinus -> "-"
 
-prettyPrintVariableDec :: PazParser.ASTVariableDeclaration -> IO ()
-prettyPrintVariableDec (identifiers, types) = do
-  printf "    %s: %s;\n" (show identifiers) (show identifiers)
+ppConstant :: PazParser.ASTConstant -> String
+ppConstant ((Nothing), n) = n
+ppConstant ((Just sign), n) = (ppSign sign) ++ n
 
-prettyPrintVariableDecList :: [PazParser.ASTVariableDeclaration] -> IO ()
-prettyPrintVariableDecList [] = return () -- do nothing
-prettyPrintVariableDecList (v:vs) = do
-  prettyPrintVariableDec v
-  prettyPrintVariableDecList vs
+ppSubrange :: PazParser.ASTSubrangeType -> String
+ppSubrange (start, end) = "[" ++ (ppConstant start) ++ ".." ++ (ppConstant end) ++ "]"
 
-prettyPrintVariableDecPart :: PazParser.ASTVariableDeclarationPart -> IO ()
-prettyPrintVariableDecPart Nothing = return () -- do nothing
-prettyPrintVariableDecPart (Just variables) = do
+ppArrayType :: PazParser.ASTArrayType -> String
+ppArrayType (range, ti) = (ppSubrange range) ++ " of " ++ (ppTypeIdentifier ti)
+
+ppTypeIdentifier :: PazParser.ASTTypeIdentifier -> String
+ppTypeIdentifier ti =
+  case ti of
+    IntegerTypeIdentifier -> "integer"
+    RealTypeIdentifier -> "real"
+    BooleanTypeIdentifier -> "boolean"
+
+ppTypeDenoter :: PazParser.ASTTypeDenoter -> String
+ppTypeDenoter td =
+  case td of
+    OrdinaryTypeDenoter t -> (ppTypeIdentifier t)
+    ArrayTypeDenoter t -> "array " ++ (ppArrayType t)
+
+ppIdentifier :: PazLexer.ASTIdentifier -> String
+ppIdentifier i = i
+
+ppIdentifierList :: PazParser.ASTIdentifierList -> String
+ppIdentifierList (var, []) = (ppIdentifier var)
+ppIdentifierList (var, (v:vs)) = (ppIdentifier var) ++ ppIdentifierList (v, vs)
+
+ppVariableDec :: PazParser.ASTVariableDeclaration -> IO ()
+ppVariableDec (identifiers, types) = do
+  printf "    %s: %s;\n" (ppIdentifierList identifiers) (ppTypeDenoter types)
+
+ppVariableDecList :: [PazParser.ASTVariableDeclaration] -> IO ()
+ppVariableDecList [] = return () -- do nothing
+ppVariableDecList (v:vs) = do
+  ppVariableDec v
+  ppVariableDecList vs
+
+ppVariableDecPart :: PazParser.ASTVariableDeclarationPart -> IO ()
+ppVariableDecPart Nothing = return () -- do nothing
+ppVariableDecPart (Just variables) = do
   printf "var\n"
-  prettyPrintVariableDecList variables
+  ppVariableDecList variables
 
+--------------------------------------------------------------------------------
+-- ASTProcedureDeclarationPart
+--------------------------------------------------------------------------------
+-- (Bool, ASTIdentifierList, ASTTypeDenoter)
+ppParamSection :: PazParser.ASTFormalParameterSection -> String
+ppParamSection (False, idlist, td) = (ppIdentifierList idlist) ++ ": " ++ (ppTypeDenoter td)
+ppParamSection (True, idlist, td) = "var " ++ (ppIdentifierList idlist) ++ ": " ++ (ppTypeDenoter td)
+
+ppParamList :: PazParser.ASTFormalParameterList -> String
+ppParamList [] = ""
+ppParamList [x] = (ppParamSection x)
+ppParamList (x:xs) = (ppParamSection x) ++ "; " ++ (ppParamList xs)
+
+ppProcedureDec :: PazParser.ASTProcedureDeclaration -> IO ()
+ppProcedureDec (ident, (Nothing), vardecpart, compound) = do
+  printf ((ppIdentifier ident) ++ ";\n")
+ppProcedureDec (ident, (Just paramlist), vardecpart, compound) = do
+  printf ((ppIdentifier ident) ++ "(" ++ (ppParamList paramlist) ++ ");\n")
+
+
+ppProcedureDecPart :: [PazParser.ASTProcedureDeclaration] -> IO ()
+ppProcedureDecPart [] = return () -- do nothing
+ppProcedureDecPart (p:ps) = do
+  (ppProcedureDec p)
+  (ppProcedureDecPart ps)
+  -- ppProcedureDec v
+  -- ppProcedureDecList vs
+
+--------------------------------------------------------------------------------
+-- ASTCompoundStatement
+--------------------------------------------------------------------------------
+ppCompound :: PazParser.ASTCompoundStatement -> IO ()
+ppCompound c = do
+  putStr "begin\n" -- check ordering !! only used in Compound Statements
+  print c
+  putStr "end\n\n" -- check ordering !! only used in Compound Statements
+
+--------------------------------------------------------------------------------
+-- Top level pretty print
+--------------------------------------------------------------------------------
 prettyPrint :: PazParser.ASTStartSymbol -> IO ()
 -- mapping ASTs to Paz programs.
 
@@ -79,6 +153,9 @@ prettyPrint (programname, variables, procedures, compound) = do
   putStr "\n\n"
 
   -- can print ASTIdentifier,
-  prettyPrintVariableDecPart variables -- can be Nothing or list of ((ASTIdentifier, [ASTIdentifier]), ASTTypeDenoter -- array or normal type)
-  print procedures
-  print compound
+  ppVariableDecPart variables -- can be Nothing or list of ((ASTIdentifier, [ASTIdentifier]), ASTTypeDenoter -- array or normal type)
+  putStr "\n"
+
+  putStr "procedure "
+  ppProcedureDecPart procedures
+  ppCompound compound
