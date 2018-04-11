@@ -8,6 +8,8 @@ import System.Environment
 
 import Text.Printf
 
+
+
 die :: String -> IO ()
 die err = do
     hPutStrLn stderr err
@@ -140,6 +142,13 @@ ppProcedureDecPart (p:ps) = do
 --------------------------------------------------------------------------------
 -- ASTCompoundStatement
 --------------------------------------------------------------------------------
+data PrevSign =
+  AddOp |
+  MulOp |
+  NotOp |
+  Empty
+  deriving (Eq, Show)
+
 ppUnsignedReal :: PazLexer.ASTUnsignedReal -> IO ()
 ppUnsignedReal _ = putStr "REALNUM"
 
@@ -170,27 +179,27 @@ ppMultOperator m =
     MultOpDiv -> putStr " div "
     MultOpAnd -> putStr " and "
 
-ppFactor :: PazParser.ASTFactor -> IO ()
-ppFactor f =
+ppFactor :: PazParser.ASTFactor -> PrevSign -> IO ()
+ppFactor f prev =
   case f of
     UnsignedConstantFactor cf -> ppUnsignedConstant cf
     VariableAccessFactor va -> ppVariableAccess va
-    ExpressionFactor ef -> ppExpression ef -- TODO need to add parans
+    ExpressionFactor ef -> ppExpression ef prev -- TODO need to add parans
     FactorFactor ff -> do
       putStr "not "
-      ppFactor ff -- TODO add parans if non-single expression
+      ppFactor ff NotOp -- TODO add parans if non-single expression
 
 ppFactorList :: [(ASTMultOperator, ASTFactor)] -> IO ()
 ppFactorList [] = return ()
 ppFactorList ((mulop, factor):fs) = do
   ppMultOperator mulop
-  ppFactor factor
+  ppFactor factor MulOp
   ppFactorList fs
 
 -- (ASTFactor, [(ASTMultOperator, ASTFactor)])
-ppTerm :: PazParser.ASTTerm -> IO ()
-ppTerm (factor, factors) = do
-  ppFactor factor
+ppTerm :: PazParser.ASTTerm -> PrevSign -> IO ()
+ppTerm (factor, factors) prev = do
+  ppFactor factor prev
   ppFactorList factors
 
 -- [(ASTAddingOperator, ASTTerm)]
@@ -198,18 +207,52 @@ ppTermList :: [(ASTAddingOperator, ASTTerm)] -> IO ()
 ppTermList [] = return ()
 ppTermList ((addop, term):ts) = do
   ppAddingOperator addop
-  ppTerm term
+  ppTerm term AddOp
   ppTermList ts
 
 -- ((Maybe (ASTSign)), ASTTerm, [(ASTAddingOperator, ASTTerm)])
-ppSimpleExpression :: PazParser.ASTSimpleExpression -> IO ()
-ppSimpleExpression ((Nothing), term, terms) = do
-  ppTerm term
-  ppTermList terms
-ppSimpleExpression ((Just sign), term, terms) = do
+ppSimpleExpression :: PazParser.ASTSimpleExpression -> PrevSign -> IO ()
+ppSimpleExpression ((Nothing), term, []) prev = do
+  if prev == Empty || prev == AddOp
+    then do
+      ppTerm term prev
+    else do
+      putStr "("
+      ppTerm term Empty
+      putStr ")"
+ppSimpleExpression ((Just sign), term, []) prev = do
   putStr (ppSign sign)
-  ppTerm term
-  ppTermList terms
+  if prev == Empty || prev == AddOp
+    then do
+      ppTerm term prev
+    else do
+      putStr "("
+      ppTerm term Empty
+      putStr ")"
+ppSimpleExpression ((Nothing), term, terms) prev = do
+  -- putStr (show prev)
+  if prev == Empty || prev == AddOp
+    then do
+      ppTerm term prev
+      ppTermList terms
+    else do
+      putStr "("
+      ppTerm term Empty
+      ppTermList terms
+      putStr ")"
+ppSimpleExpression ((Just sign), term, terms) prev = do
+  -- putStr (show prev)
+  if prev == Empty || prev == AddOp
+    then do
+      putStr (ppSign sign)
+      ppTerm term prev
+      ppTermList terms
+    else do
+      putStr (ppSign sign)
+      putStr "("
+      ppTerm term Empty
+      ppTermList terms
+      putStr ")"
 
 ppRelOperator :: PazParser.ASTRelationalOperator -> IO ()
 ppRelOperator r =
@@ -222,19 +265,35 @@ ppRelOperator r =
     ROGreaterThanOrEqual -> putStr " >= "
 
 -- (ASTSimpleExpression, Maybe (ASTRelationalOperator, ASTSimpleExpression))
-ppExpression :: PazParser.ASTExpression -> IO ()
-ppExpression (simple, Nothing) = ppSimpleExpression simple
-ppExpression (simple, (Just (relop, simple2))) = do
-  ppSimpleExpression simple
-  ppRelOperator relop
-  ppSimpleExpression simple2
+ppExpression :: PazParser.ASTExpression -> PrevSign -> IO ()
+ppExpression (simple, Nothing) prev =
+  if prev == Empty
+    then do
+      ppSimpleExpression simple prev
+    else do
+      putStr "("
+      ppSimpleExpression simple Empty
+      putStr ")"
+ppExpression (simple, (Just (relop, simple2))) prev = do
+  -- putStr (show prev)
+  if prev == Empty
+    then do
+      ppSimpleExpression simple prev
+      ppRelOperator relop
+      ppSimpleExpression simple2 prev
+    else do
+      putStr "("
+      ppSimpleExpression simple Empty
+      ppRelOperator relop
+      ppSimpleExpression simple2 Empty
+      putStr ")"
 
 -- [ASTExpression]
 ppActualParamList :: PazParser.ASTActualParameterList -> IO ()
 ppActualParamList [] = return ()
-ppActualParamList [x] = ppExpression x
+ppActualParamList [x] = ppExpression x Empty
 ppActualParamList (x:xs) = do
-  ppExpression x
+  ppExpression x Empty
   putStr ", "
   ppActualParamList xs
 
@@ -242,7 +301,7 @@ ppActualParamList (x:xs) = do
 ppIndexedVariable :: PazParser.ASTIndexedVariable -> IO ()
 ppIndexedVariable (ident, expression) = do
   putStr (ppIdentifier ident)
-  ppExpression expression
+  ppExpression expression Empty
 
 ppVariableAccess :: PazParser.ASTVariableAccess -> IO ()
 ppVariableAccess v =
@@ -267,18 +326,18 @@ ppAssignmentStmt (variable, expression) = do
     VariableAcessAssignmentStatement va ->  ppVariableAccess va
     IdentifierAssignmentStatement i -> putStr (ppIdentifier i)
   putStr " := "
-  ppExpression expression
+  ppExpression expression Empty
 
 -- (ASTExpression, ASTStatement, (Maybe ASTStatement))
 ppIfStmt :: PazParser.ASTIfStatement -> IO ()
 ppIfStmt (expression, thenstmt, (Nothing)) = do
   putStr "if "
-  ppExpression expression
+  ppExpression expression Empty
   putStr " then\n"
   ppStatement thenstmt
 ppIfStmt (expression, thenstmt, (Just elsestmt)) = do
   putStr "if "
-  ppExpression expression
+  ppExpression expression Empty
   putStr " then\n    " --TODO() handle indents
   ppStatement thenstmt
   putStr "\nelse\n    "
@@ -288,7 +347,7 @@ ppIfStmt (expression, thenstmt, (Just elsestmt)) = do
 ppWhileStmt :: PazParser.ASTWhileStatement -> IO ()
 ppWhileStmt (expression, statement) = do
   putStr "while "
-  ppExpression expression
+  ppExpression expression Empty
   putStr " do "
   ppStatement statement
 
@@ -298,9 +357,9 @@ ppForStmt (ident, expr1, expr2, stmt) = do
   putStr "for "
   putStr (ppIdentifier ident)
   putStr " := "
-  ppExpression expr1
+  ppExpression expr1 Empty
   putStr " to "
-  ppExpression expr2
+  ppExpression expr2 Empty
   putStr " do \n"
   ppStatement stmt
 
