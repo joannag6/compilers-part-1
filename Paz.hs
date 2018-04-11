@@ -134,8 +134,10 @@ ppProcedureDecPart (p:ps) = do
 --------------------------------------------------------------------------------
 -- ASTCompoundStatement
 --------------------------------------------------------------------------------
+
+
 ppCompound :: PazParser.ASTCompoundStatement -> IO ()
-ppCompound c = do
+ppCompound (c) = do
   putStr "begin\n" -- check ordering !! only used in Compound Statements
   print c
   putStr "end\n\n" -- check ordering !! only used in Compound Statements
