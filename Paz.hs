@@ -198,8 +198,10 @@ ppFactorList ((mulop, factor):fs) = do
 
 -- (ASTFactor, [(ASTMultOperator, ASTFactor)])
 ppTerm :: PazParser.ASTTerm -> PrevSign -> IO ()
-ppTerm (factor, factors) prev = do
+ppTerm (factor, []) prev = do
   ppFactor factor prev
+ppTerm (factor, factors) prev = do
+  ppFactor factor MulOp
   ppFactorList factors
 
 -- [(ASTAddingOperator, ASTTerm)]
@@ -233,7 +235,7 @@ ppSimpleExpression ((Nothing), term, terms) prev = do
   -- putStr (show prev)
   if prev == Empty || prev == AddOp
     then do
-      ppTerm term prev
+      ppTerm term AddOp
       ppTermList terms
     else do
       putStr "("
@@ -245,7 +247,7 @@ ppSimpleExpression ((Just sign), term, terms) prev = do
   if prev == Empty || prev == AddOp
     then do
       putStr (ppSign sign)
-      ppTerm term prev
+      ppTerm term AddOp
       ppTermList terms
     else do
       putStr (ppSign sign)
