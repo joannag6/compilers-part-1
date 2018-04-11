@@ -6,7 +6,7 @@ f: boolean;
 
 procedure boo;
     var
-        a: array [3..4] of integer;
+        a: array [3..5] of integer;
         b: array [5..23] of integer;
 begin
     while b[5] >= 0 do read(a[4])

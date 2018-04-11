@@ -59,6 +59,12 @@ ppSign s =
     PazParser.SignPlus -> "+"
     PazParser.SignMinus -> "-"
 
+ppLexSign :: PazLexer.ASTSign -> String
+ppLexSign s =
+  case s of
+    PazLexer.SignPlus -> "+"
+    PazLexer.SignMinus -> "-"
+
 ppConstant :: PazParser.ASTConstant -> String
 ppConstant ((Nothing), n) = n
 ppConstant ((Just sign), n) = (ppSign sign) ++ n
@@ -152,8 +158,21 @@ data PrevSign =
   Empty
   deriving (Eq, Show)
 
+-- ((Maybe ASTSign), ASTDigitSequence)
+ppScale :: PazLexer.ASTScaleFactor -> String
+ppScale (Nothing, digits) = digits
+ppScale ((Just sign), digits) = (ppLexSign sign) ++ digits
+
+-- (ASTDigitSequence, (Maybe ASTDigitSequence), (Maybe ASTScaleFactor))
 ppUnsignedReal :: PazLexer.ASTUnsignedReal -> IO ()
-ppUnsignedReal _ = putStr "REALNUM"
+ppUnsignedReal (digits, (Nothing), (Nothing)) =
+  putStr digits
+ppUnsignedReal (digits, (Just decimals), (Nothing)) =
+  putStr (digits ++ "." ++ decimals)
+ppUnsignedReal (digits, (Nothing), (Just scale)) =
+  putStr (digits ++ "e" ++ (ppScale scale))
+ppUnsignedReal (digits, (Just decimals), (Just scale)) =
+  putStr (digits ++ "." ++ decimals ++ "e" ++ (ppScale scale))
 
 ppUnsignedNum :: PazParser.ASTUnsignedNumber -> IO ()
 ppUnsignedNum n =
@@ -202,7 +221,7 @@ ppFactorList ((mulop, factor):fs) = do
 -- (ASTFactor, [(ASTMultOperator, ASTFactor)])
 ppTerm :: PazParser.ASTTerm -> PrevSign -> IO ()
 ppTerm (factor, []) prev = do
-  ppFactor factor prev
+  ppFactor factor Empty
 ppTerm (factor, factors) prev = do
   ppFactor factor MulOp
   ppFactorList factors
@@ -222,18 +241,14 @@ ppSimpleExpression ((Nothing), term, []) prev = do
     then do
       ppTerm term prev
     else do
-      putStr "("
       ppTerm term Empty
-      putStr ")"
 ppSimpleExpression ((Just sign), term, []) prev = do
   putStr (ppSign sign)
   if prev == Empty || prev == AddOp
     then do
       ppTerm term prev
     else do
-      putStr "("
       ppTerm term Empty
-      putStr ")"
 ppSimpleExpression ((Nothing), term, terms) prev = do
   -- putStr (show prev)
   if prev == Empty || prev == AddOp
@@ -306,7 +321,9 @@ ppActualParamList (x:xs) = do
 ppIndexedVariable :: PazParser.ASTIndexedVariable -> IO ()
 ppIndexedVariable (ident, expression) = do
   putStr (ppIdentifier ident)
+  putStr "["
   ppExpression expression Empty
+  putStr "]"
 
 ppVariableAccess :: PazParser.ASTVariableAccess -> IO ()
 ppVariableAccess v =
