@@ -1,2 +1,2 @@
-PazParserMake: PazParserTest.hs
-	ghc --make PazParserTest.hs
+Paz: Paz.hs
+	ghc --make Paz.hs
