@@ -120,14 +120,14 @@ ppFormalParamList (x:xs) = (ppParamSection x) ++ "; " ++ (ppFormalParamList xs)
 
 ppProcedureDec :: PazParser.ASTProcedureDeclaration -> IO ()
 ppProcedureDec (ident, (Nothing), vardecpart, compound) = do
-  printf ((ppIdentifier ident) ++ ";")
+  printf ("procedure " ++ (ppIdentifier ident) ++ ";")
   ppVariableDecPart vardecpart
-  ppCompound compound
+  ppCompound compound 4
   putStr ";\n\n"
 ppProcedureDec (ident, (Just paramlist), vardecpart, compound) = do
-  printf ((ppIdentifier ident) ++ "(" ++ (ppFormalParamList paramlist) ++ ");")
+  printf ("procedure " ++ (ppIdentifier ident) ++ "(" ++ (ppFormalParamList paramlist) ++ ");")
   ppVariableDecPart vardecpart
-  ppCompound compound
+  ppCompound compound 4
   putStr ";\n\n"
 
 
@@ -142,6 +142,9 @@ ppProcedureDecPart (p:ps) = do
 --------------------------------------------------------------------------------
 -- ASTCompoundStatement
 --------------------------------------------------------------------------------
+ppIndent :: Int -> IO ()
+ppIndent n = putStr (concat (replicate n " "))
+
 data PrevSign =
   AddOp |
   MulOp |
@@ -312,18 +315,21 @@ ppVariableAccess v =
     IdenfierVariableAccess i -> putStr (ppIdentifier i)
 
 -- (ASTIdentifier, Maybe ASTActualParameterList )
-ppProcedureStmt :: PazParser.ASTProcedureStatement -> IO ()
-ppProcedureStmt (i, Nothing) = do
+ppProcedureStmt :: PazParser.ASTProcedureStatement -> Int -> IO ()
+ppProcedureStmt (i, Nothing) indent = do
+  ppIndent indent
   putStr (ppIdentifier i)
-ppProcedureStmt (i, (Just params)) = do
+ppProcedureStmt (i, (Just params)) indent = do
+  ppIndent indent
   putStr (ppIdentifier i)
   putStr "("
   ppActualParamList params
   putStr ")"
 
 -- (Variable, ASTExpression) -- Variable only used in this statement
-ppAssignmentStmt :: PazParser.ASTAssignmentStatement -> IO ()
-ppAssignmentStmt (variable, expression) = do
+ppAssignmentStmt :: PazParser.ASTAssignmentStatement -> Int -> IO ()
+ppAssignmentStmt (variable, expression) indent = do
+  ppIndent indent
   case variable of
     VariableAcessAssignmentStatement va ->  ppVariableAccess va
     IdentifierAssignmentStatement i -> putStr (ppIdentifier i)
@@ -331,67 +337,76 @@ ppAssignmentStmt (variable, expression) = do
   ppExpression expression Empty
 
 -- (ASTExpression, ASTStatement, (Maybe ASTStatement))
-ppIfStmt :: PazParser.ASTIfStatement -> IO ()
-ppIfStmt (expression, thenstmt, (Nothing)) = do
+ppIfStmt :: PazParser.ASTIfStatement -> Int -> IO ()
+ppIfStmt (expression, thenstmt, (Nothing)) indent = do
+  ppIndent indent
   putStr "if "
   ppExpression expression Empty
   putStr " then\n"
-  ppStatement thenstmt
-ppIfStmt (expression, thenstmt, (Just elsestmt)) = do
+  ppStatement thenstmt (indent+4)
+ppIfStmt (expression, thenstmt, (Just elsestmt)) indent = do
+  ppIndent indent
   putStr "if "
   ppExpression expression Empty
-  putStr " then\n    " --TODO() handle indents
-  ppStatement thenstmt
-  putStr "\nelse\n    "
-  ppStatement elsestmt
+  putStr " then\n"
+  ppStatement thenstmt (indent+4)
+  putStr "\n"
+  ppIndent indent
+  putStr "else\n"
+  ppStatement elsestmt (indent+4)
 
 -- (ASTExpression, ASTStatement)
-ppWhileStmt :: PazParser.ASTWhileStatement -> IO ()
-ppWhileStmt (expression, statement) = do
+ppWhileStmt :: PazParser.ASTWhileStatement -> Int -> IO ()
+ppWhileStmt (expression, statement) indent = do
+  ppIndent indent
   putStr "while "
   ppExpression expression Empty
-  putStr " do "
-  ppStatement statement
+  putStr " do\n"
+  ppStatement statement (indent+4)
 
 -- (ASTIdentifier, ASTExpression, ASTExpression, ASTStatement)
-ppForStmt :: PazParser.ASTForStatement -> IO ()
-ppForStmt (ident, expr1, expr2, stmt) = do
+ppForStmt :: PazParser.ASTForStatement -> Int -> IO ()
+ppForStmt (ident, expr1, expr2, stmt) indent = do
+  ppIndent indent
   putStr "for "
   putStr (ppIdentifier ident)
   putStr " := "
   ppExpression expr1 Empty
   putStr " to "
   ppExpression expr2 Empty
-  putStr " do \n"
-  ppStatement stmt
+  putStr " do\n"
+  ppStatement stmt (indent+4)
 
-ppStatement :: PazParser.ASTStatement -> IO ()
-ppStatement s =
+ppStatement :: PazParser.ASTStatement -> Int -> IO ()
+ppStatement s indent = do
   case s of
-    AssignmentStatement as -> ppAssignmentStmt as
-    ProcedureStatement ps -> ppProcedureStmt ps
-    CompoundStatement cs -> ppCompound cs
-    IfStatement is -> ppIfStmt is
-    WhileStatement ws -> ppWhileStmt ws
-    ForStatement fs -> ppForStmt fs
+    AssignmentStatement as -> ppAssignmentStmt as indent
+    ProcedureStatement ps -> ppProcedureStmt ps indent
+    CompoundStatement cs -> ppCompound cs indent
+    IfStatement is -> ppIfStmt is indent
+    WhileStatement ws -> ppWhileStmt ws indent
+    ForStatement fs -> ppForStmt fs indent
     EmptyStatement -> putStr ";\n"
 
 -- [ASTStatement]   TODO - add ";\n" before each statement if not first one
-ppStatementSequence :: PazParser.ASTStatementSequence -> IO ()
-ppStatementSequence [] = return ()
-ppStatementSequence [x] = do
-  ppStatement x
-ppStatementSequence (x:xs) = do
-  ppStatement x
+ppStatementSequence :: PazParser.ASTStatementSequence -> Int -> IO ()
+ppStatementSequence [] _ = return ()
+ppStatementSequence [x] indent = do
+  ppStatement x indent
+ppStatementSequence (x:xs) indent = do
+  ppStatement x indent
   putStr ";\n"
-  ppStatementSequence xs
+  ppStatementSequence xs indent
 
 -- (ASTStatementSequence)
-ppCompound :: PazParser.ASTCompoundStatement -> IO ()
-ppCompound (c) = do
+ppCompound :: PazParser.ASTCompoundStatement -> Int -> IO ()
+ppCompound (c) indent = do
+  ppIndent (indent-4)
   putStr "begin\n" -- check ordering !! only used in Compound Statements
-  ppStatementSequence c
-  putStr "\nend" -- check ordering !! only used in Compound Statements
+  ppStatementSequence c indent
+  putStr "\n"
+  ppIndent (indent-4)
+  putStr "end" -- check ordering !! only used in Compound Statements
 
 -- TODO TODO TODO indents and new lines
 
@@ -411,7 +426,6 @@ prettyPrint (programname, variables, procedures, compound) = do
   ppVariableDecPart variables -- can be Nothing or list of ((ASTIdentifier, [ASTIdentifier]), ASTTypeDenoter -- array or normal type)
   putStr "\n"
 
-  putStr "procedure "
   ppProcedureDecPart procedures
-  ppCompound compound
+  ppCompound compound 4
   putStr ".\n"
