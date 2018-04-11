@@ -660,7 +660,7 @@ parseCompoundStatement =
 -- Corresponds to statement_sequence
 --statement_sequence
 --    : statement {SEMICOLON statement}
-type ASTStatementSequence = (ASTStatement, [ASTStatement])
+type ASTStatementSequence = [ASTStatement]
 parseStatementSequence :: Parser ASTStatementSequence
 parseStatementSequence =
     trace
@@ -679,7 +679,7 @@ parseStatementSequence =
                                 return x2
                         )
                     )
-                return (x0,x1)
+                return (x0:x1)
         )
 
 --corresponds to statement in PazParserBNF.txt
