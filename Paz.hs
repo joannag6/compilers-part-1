@@ -100,7 +100,7 @@ ppVariableDecList (v:vs) = do
 ppVariableDecPart :: PazParser.ASTVariableDeclarationPart -> IO ()
 ppVariableDecPart Nothing = return () -- do nothing
 ppVariableDecPart (Just variables) = do
-  printf "var\n"
+  printf "\nvar\n"
   ppVariableDecList variables
 
 --------------------------------------------------------------------------------
@@ -118,13 +118,15 @@ ppFormalParamList (x:xs) = (ppParamSection x) ++ "; " ++ (ppFormalParamList xs)
 
 ppProcedureDec :: PazParser.ASTProcedureDeclaration -> IO ()
 ppProcedureDec (ident, (Nothing), vardecpart, compound) = do
-  printf ((ppIdentifier ident) ++ ";\n")
+  printf ((ppIdentifier ident) ++ ";")
   ppVariableDecPart vardecpart
   ppCompound compound
+  putStr ";\n\n"
 ppProcedureDec (ident, (Just paramlist), vardecpart, compound) = do
-  printf ((ppIdentifier ident) ++ "(" ++ (ppFormalParamList paramlist) ++ ");\n")
+  printf ((ppIdentifier ident) ++ "(" ++ (ppFormalParamList paramlist) ++ ");")
   ppVariableDecPart vardecpart
   ppCompound compound
+  putStr ";\n\n"
 
 
 ppProcedureDecPart :: [PazParser.ASTProcedureDeclaration] -> IO ()
@@ -138,8 +140,94 @@ ppProcedureDecPart (p:ps) = do
 --------------------------------------------------------------------------------
 -- ASTCompoundStatement
 --------------------------------------------------------------------------------
+ppUnsignedReal :: PazLexer.ASTUnsignedReal -> IO ()
+ppUnsignedReal _ = putStr "REALNUM"
+
+ppUnsignedNum :: PazParser.ASTUnsignedNumber -> IO ()
+ppUnsignedNum n =
+  case n of
+    UnsignedInteger i -> putStr (show i)-- print i
+    UnsignedReal r -> ppUnsignedReal r
+
+ppUnsignedConstant :: PazParser.ASTUnsignedConstant -> IO ()
+ppUnsignedConstant c =
+  case c of
+    UnsignedNumberConstant n -> ppUnsignedNum n
+    CharacterStringConstant s -> putStr ("'" ++ s ++ "'")
+
+ppAddingOperator :: PazParser.ASTAddingOperator -> IO ()
+ppAddingOperator a =
+  case a of
+    AddOpPlus -> putStr " + "
+    AddOpMinus -> putStr " - "
+    AddOpOr -> putStr " or "
+
+ppMultOperator :: PazParser.ASTMultOperator -> IO ()
+ppMultOperator m =
+  case m of
+    MultOpTimes -> putStr " * "
+    MultOpDivideBy -> putStr " / "
+    MultOpDiv -> putStr " div "
+    MultOpAnd -> putStr " and "
+
+ppFactor :: PazParser.ASTFactor -> IO ()
+ppFactor f =
+  case f of
+    UnsignedConstantFactor cf -> ppUnsignedConstant cf
+    VariableAccessFactor va -> ppVariableAccess va
+    ExpressionFactor ef -> ppExpression ef -- TODO need to add parans
+    FactorFactor ff -> do
+      putStr "not "
+      ppFactor ff -- TODO add parans if non-single expression
+
+ppFactorList :: [(ASTMultOperator, ASTFactor)] -> IO ()
+ppFactorList [] = return ()
+ppFactorList ((mulop, factor):fs) = do
+  ppMultOperator mulop
+  ppFactor factor
+  ppFactorList fs
+
+-- (ASTFactor, [(ASTMultOperator, ASTFactor)])
+ppTerm :: PazParser.ASTTerm -> IO ()
+ppTerm (factor, factors) = do
+  ppFactor factor
+  ppFactorList factors
+
+-- [(ASTAddingOperator, ASTTerm)]
+ppTermList :: [(ASTAddingOperator, ASTTerm)] -> IO ()
+ppTermList [] = return ()
+ppTermList ((addop, term):ts) = do
+  ppAddingOperator addop
+  ppTerm term
+  ppTermList ts
+
+-- ((Maybe (ASTSign)), ASTTerm, [(ASTAddingOperator, ASTTerm)])
+ppSimpleExpression :: PazParser.ASTSimpleExpression -> IO ()
+ppSimpleExpression ((Nothing), term, terms) = do
+  ppTerm term
+  ppTermList terms
+ppSimpleExpression ((Just sign), term, terms) = do
+  putStr (ppSign sign)
+  ppTerm term
+  ppTermList terms
+
+ppRelOperator :: PazParser.ASTRelationalOperator -> IO ()
+ppRelOperator r =
+  case r of
+    ROEqual -> putStr " = "
+    RONotEqual -> putStr " <> "
+    ROLessThan -> putStr " < "
+    ROGreaterThan -> putStr " > "
+    ROLessThanOrEqual -> putStr " <= "
+    ROGreaterThanOrEqual -> putStr " >= "
+
+-- (ASTSimpleExpression, Maybe (ASTRelationalOperator, ASTSimpleExpression))
 ppExpression :: PazParser.ASTExpression -> IO ()
-ppExpression _ = putStr "Expression"
+ppExpression (simple, Nothing) = ppSimpleExpression simple
+ppExpression (simple, (Just (relop, simple2))) = do
+  ppSimpleExpression simple
+  ppRelOperator relop
+  ppSimpleExpression simple2
 
 -- [ASTExpression]
 ppActualParamList :: PazParser.ASTActualParameterList -> IO ()
@@ -168,7 +256,9 @@ ppProcedureStmt (i, Nothing) = do
   putStr (ppIdentifier i)
 ppProcedureStmt (i, (Just params)) = do
   putStr (ppIdentifier i)
+  putStr "("
   ppActualParamList params
+  putStr ")"
 
 -- (Variable, ASTExpression) -- Variable only used in this statement
 ppAssignmentStmt :: PazParser.ASTAssignmentStatement -> IO ()
@@ -176,6 +266,7 @@ ppAssignmentStmt (variable, expression) = do
   case variable of
     VariableAcessAssignmentStatement va ->  ppVariableAccess va
     IdentifierAssignmentStatement i -> putStr (ppIdentifier i)
+  putStr " := "
   ppExpression expression
 
 -- (ASTExpression, ASTStatement, (Maybe ASTStatement))
@@ -193,6 +284,26 @@ ppIfStmt (expression, thenstmt, (Just elsestmt)) = do
   putStr "\nelse\n    "
   ppStatement elsestmt
 
+-- (ASTExpression, ASTStatement)
+ppWhileStmt :: PazParser.ASTWhileStatement -> IO ()
+ppWhileStmt (expression, statement) = do
+  putStr "while "
+  ppExpression expression
+  putStr " do "
+  ppStatement statement
+
+-- (ASTIdentifier, ASTExpression, ASTExpression, ASTStatement)
+ppForStmt :: PazParser.ASTForStatement -> IO ()
+ppForStmt (ident, expr1, expr2, stmt) = do
+  putStr "for "
+  putStr (ppIdentifier ident)
+  putStr " := "
+  ppExpression expr1
+  putStr " to "
+  ppExpression expr2
+  putStr " do \n"
+  ppStatement stmt
+
 ppStatement :: PazParser.ASTStatement -> IO ()
 ppStatement s =
   case s of
@@ -200,25 +311,27 @@ ppStatement s =
     ProcedureStatement ps -> ppProcedureStmt ps
     CompoundStatement cs -> ppCompound cs
     IfStatement is -> ppIfStmt is
-    WhileStatement ws -> return () -- TODO()
-    ForStatement fs -> return () -- TODO()
+    WhileStatement ws -> ppWhileStmt ws
+    ForStatement fs -> ppForStmt fs
     EmptyStatement -> putStr ";\n"
 
--- (ASTStatement, [ASTStatement])
+-- [ASTStatement]   TODO - add ";\n" before each statement if not first one
 ppStatementSequence :: PazParser.ASTStatementSequence -> IO ()
-ppStatementSequence (statement, []) = ppStatement statement
-ppStatementSequence (statement, (x:xs)) = do
-  ppStatement statement
-  ppStatementSequence (x, xs)
+ppStatementSequence [] = return ()
+ppStatementSequence [x] = do
+  ppStatement x
+ppStatementSequence (x:xs) = do
+  ppStatement x
+  putStr ";\n"
+  ppStatementSequence xs
 
 -- (ASTStatementSequence)
 ppCompound :: PazParser.ASTCompoundStatement -> IO ()
 ppCompound (c) = do
   putStr "begin\n" -- check ordering !! only used in Compound Statements
   ppStatementSequence c
-  putStr "\nend\n" -- check ordering !! only used in Compound Statements
+  putStr "\nend" -- check ordering !! only used in Compound Statements
 
--- TODO TODO TODO punctuation after end. or end; or just end
 -- TODO TODO TODO indents and new lines
 
 --------------------------------------------------------------------------------
@@ -231,7 +344,7 @@ prettyPrint :: PazParser.ASTStartSymbol -> IO ()
 -- prettyPrint ast = putStrLn "I'm a placeholder" -- TODO(joanna): put pretty printing here
 prettyPrint (programname, variables, procedures, compound) = do
   printf "program %s;" programname
-  putStr "\n\n"
+  putStr "\n"
 
   -- can print ASTIdentifier,
   ppVariableDecPart variables -- can be Nothing or list of ((ASTIdentifier, [ASTIdentifier]), ASTTypeDenoter -- array or normal type)
@@ -240,3 +353,4 @@ prettyPrint (programname, variables, procedures, compound) = do
   putStr "procedure "
   ppProcedureDecPart procedures
   ppCompound compound
+  putStr ".\n"
