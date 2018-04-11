@@ -2,9 +2,12 @@ import Debug.Trace (trace)
 import Text.Parsec (parse)
 import PazLexer
 import PazParser
+import PazPrettyPrinter
 import System.IO (hPutStrLn, stderr)
 import System.Exit (exitFailure, exitWith, ExitCode(..))
 import System.Environment
+
+import Text.Printf
 
 die :: String -> IO ()
 die err = do
@@ -20,10 +23,10 @@ main = do
                 putStrLn "Sorry, cannot generate code yet"
                 exitWith (ExitFailure 1)
         ["-p", a] -> doParsing a
-        otherwise -> do 
+        otherwise -> do
                         putStrLn ("Usage: " ++ progname ++ " [-p] sourcefile")
                         exitWith (ExitFailure 1)
-    
+
 doParsing :: String -> IO ()
 doParsing filename = do
     input <- readFile (filename)
@@ -43,9 +46,4 @@ doParsing filename = do
                 Left error ->
                     die ("Syntax error:\n" ++ show error)
                 Right ast ->
-                    --putStrLn (show ast)
-                    prettyPrint ast
-
-prettyPrint :: PazParser.ASTStartSymbol -> IO ()
-prettyPrint ast = putStrLn "I'm a placeholder"
-
+                    PazPrettyPrinter.prettyPrint ast

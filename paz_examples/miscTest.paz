@@ -6,16 +6,16 @@ f: boolean;
 
 procedure boo;
     var
-        a: array [3..4] of integer;
+        a: array [3..5] of integer;
         b: array [5..23] of integer;
 begin
-    while b[5] >= 0 do read(a[4])
+    while b[5] >= (0) do read(a[4])
 end;
 
 procedure foo (k: real);
   var ifigenia: integer;        t: boolean;
 begin
-  ifigenia := 4+ 5 - 9 *(-1 + 3)
+  ifigenia := (4)+ 5 - 9 *(-1 + 3)
 end;
 
 procedure goo (var q: boolean;
@@ -25,12 +25,12 @@ procedure goo (var q: boolean;
         {ranges not in order, but we don't test that yet}
         matrix: array [0..4] of integer;
 begin
-if m - 2 < 3 *8 then matrix[2] := 7
+if (m - 2) < 3 *8 then matrix[2] := 7
 end;
 
 begin
 
-id := 5 * 2 + 1;
+id := 5 * (2 + 1) * (1 + 3);
 f := not (false and true) or false;
 read(f);
 write('strings allowed in write');
