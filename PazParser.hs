@@ -70,7 +70,7 @@ parseTokenLeftParenthesis =
                     otherwise -> False
             )
         )
-    
+
 parseTokenRightParenthesis :: Parser ()
 parseTokenRightParenthesis =
     void (
@@ -81,7 +81,7 @@ parseTokenRightParenthesis =
                     otherwise -> False
             )
         )
-    
+
 parseTokenTimes :: Parser ()
 parseTokenTimes =
     void (
@@ -92,7 +92,7 @@ parseTokenTimes =
                     otherwise -> False
             )
         )
-    
+
 parseTokenPlus :: Parser ()
 parseTokenPlus =
     void (
@@ -103,7 +103,7 @@ parseTokenPlus =
                     otherwise -> False
             )
         )
-    
+
 parseTokenComma :: Parser ()
 parseTokenComma =
     void (
@@ -114,7 +114,7 @@ parseTokenComma =
                     otherwise -> False
             )
         )
-    
+
 parseTokenMinus :: Parser ()
 parseTokenMinus =
     void (
@@ -125,7 +125,7 @@ parseTokenMinus =
                     otherwise -> False
             )
         )
-    
+
 parseTokenEllipsis :: Parser ()
 parseTokenEllipsis =
     void (
@@ -136,7 +136,7 @@ parseTokenEllipsis =
                     otherwise -> False
             )
         )
-    
+
 parseTokenDot :: Parser ()
 parseTokenDot =
     void (
@@ -147,7 +147,7 @@ parseTokenDot =
                     otherwise -> False
             )
         )
-    
+
 parseTokenDivideBy :: Parser ()
 parseTokenDivideBy =
     void (
@@ -158,7 +158,7 @@ parseTokenDivideBy =
                     otherwise -> False
             )
         )
-    
+
 parseTokenAssign :: Parser ()
 parseTokenAssign =
     void (
@@ -169,7 +169,7 @@ parseTokenAssign =
                     otherwise -> False
             )
         )
-    
+
 parseTokenColon :: Parser ()
 parseTokenColon =
     void (
@@ -180,7 +180,7 @@ parseTokenColon =
                     otherwise -> False
             )
         )
-    
+
 parseTokenSemicolon :: Parser ()
 parseTokenSemicolon =
     void (
@@ -191,7 +191,7 @@ parseTokenSemicolon =
                     otherwise -> False
             )
         )
-    
+
 parseTokenLessThanOrEqual :: Parser ()
 parseTokenLessThanOrEqual =
     void (
@@ -202,7 +202,7 @@ parseTokenLessThanOrEqual =
                     otherwise -> False
             )
         )
-    
+
 parseTokenNotEqual :: Parser ()
 parseTokenNotEqual =
     void (
@@ -213,7 +213,7 @@ parseTokenNotEqual =
                     otherwise -> False
             )
         )
-    
+
 parseTokenLessThan :: Parser ()
 parseTokenLessThan =
     void (
@@ -224,7 +224,7 @@ parseTokenLessThan =
                     otherwise -> False
             )
         )
-    
+
 parseTokenEqual :: Parser ()
 parseTokenEqual =
     void (
@@ -235,7 +235,7 @@ parseTokenEqual =
                     otherwise -> False
             )
         )
-    
+
 parseTokenGreaterThanOrEqual :: Parser ()
 parseTokenGreaterThanOrEqual =
     void (
@@ -246,7 +246,7 @@ parseTokenGreaterThanOrEqual =
                     otherwise -> False
             )
         )
-    
+
 parseTokenGreaterThan :: Parser ()
 parseTokenGreaterThan =
     void (
@@ -257,7 +257,7 @@ parseTokenGreaterThan =
                     otherwise -> False
             )
         )
-    
+
 parseTokenLeftBracket :: Parser ()
 parseTokenLeftBracket =
     void (
@@ -268,7 +268,7 @@ parseTokenLeftBracket =
                     otherwise -> False
             )
         )
-    
+
 parseTokenRightBracket :: Parser ()
 parseTokenRightBracket =
     void (
@@ -279,7 +279,7 @@ parseTokenRightBracket =
                     otherwise -> False
             )
         )
-    
+
 parseTokenAnd :: Parser ()
 parseTokenAnd =
     void (
@@ -537,7 +537,7 @@ parseCharacterString :: Parser ASTCharacterString
 parseCharacterString =
     do
         (LTCharacterString x) <-
-            satisfy(   
+            satisfy(
                 \x ->
                     case x of
                         LTCharacterString _ -> True
@@ -586,7 +586,7 @@ parseUnsignedReal =
 ----------------------------------------------------------------------------------------------
 -----------------------------------------------------------------------------------------------
 -- end of lexical tokens section
- 
+
 type ASTStartSymbol = ASTProgram
 parseStartSymbol :: Parser ASTStartSymbol
 parseStartSymbol =
@@ -662,7 +662,7 @@ parseCompoundStatement =
 --    : statement {SEMICOLON statement}
 type ASTStatementSequence = [ASTStatement]
 parseStatementSequence :: Parser ASTStatementSequence
-parseStatementSequence = 
+parseStatementSequence =
     trace
         "parseStatementSequence"
         (
@@ -691,9 +691,9 @@ parseStatementSequence =
 --  | if_statement
 --  | while_statement
 --  | for_statement
---  | empty_statement     -- must go at the end. 
+--  | empty_statement     -- must go at the end.
 type ASTStatement = Statement
-data Statement = 
+data Statement =
     AssignmentStatement ASTAssignmentStatement |
     ProcedureStatement ASTProcedureStatement |
     CompoundStatement ASTCompoundStatement |
@@ -702,9 +702,9 @@ data Statement =
     ForStatement ASTForStatement |
     EmptyStatement
     deriving(Show)
-    
+
 parseStatement :: Parser ASTStatement
-parseStatement = 
+parseStatement =
     trace
         "parseStatement"
         (
@@ -743,21 +743,21 @@ parseStatement =
                 do
                     return EmptyStatement
             ]
-                
+
         )
-    
+
 type ASTAssignmentStatement = (Variable, ASTExpression)
-data Variable = 
+data Variable =
     VariableAcessAssignmentStatement ASTVariableAccess |
     IdentifierAssignmentStatement ASTIdentifier
     deriving(Show)
 parseAssignmentStatement :: Parser ASTAssignmentStatement
-parseAssignmentStatement = 
+parseAssignmentStatement =
     trace
         "parseAssignmentStatement"
         (
             do
-                x0 <- 
+                x0 <-
                     choice
                     [
                         try (
@@ -776,7 +776,7 @@ parseAssignmentStatement =
 
 -- Correpsonds to procedure_statement
 -- procedure_statement : identifier [actual_parameter list]
-type ASTProcedureStatement = (ASTIdentifier, Maybe ASTActualParameterList )
+type ASTProcedureStatement = (ASTIdentifier, Maybe ASTActualParameterList)
 parseProcedureStatement :: Parser ASTProcedureStatement
 parseProcedureStatement =
     trace
@@ -784,7 +784,7 @@ parseProcedureStatement =
         (
             do
                 x0 <-parseIdentifier
-                x1 <- 
+                x1 <-
                     optionMaybe
                     (
                         try
@@ -801,14 +801,14 @@ parseProcedureStatement =
 --    : LEFT_PARENTHESIS expression {COMMA expression} RIGHT_PARENTHESIS
 type ASTActualParameterList = [ASTExpression]
 parseActualParameterList :: Parser ASTActualParameterList
-parseActualParameterList = 
-    trace 
+parseActualParameterList =
+    trace
         "parseActualParameterList"
         (
             do
                 parseTokenLeftParenthesis
                 x0 <- parseExpression
-                x1 <- 
+                x1 <-
                     many
                     (
                         try
@@ -821,11 +821,11 @@ parseActualParameterList =
                     )
                 parseTokenRightParenthesis
                 return (x0:x1)
-        ) 
+        )
 
 -- Corresponds to if_statement.
 --if_statement
---    : IF expression THEN statement [ELSE statement]    
+--    : IF expression THEN statement [ELSE statement]
 type ASTIfStatement = (ASTExpression, ASTStatement, (Maybe ASTStatement))
 parseIfStatement :: Parser ASTIfStatement
 parseIfStatement =
@@ -849,13 +849,13 @@ parseIfStatement =
                     )
                 return (x0,x1,x2)
         )
-      
+
 -- Corresponds to while_statement
 -- while_statement
 --    : WHILE expression DO statement
 type ASTWhileStatement = (ASTExpression, ASTStatement)
 parseWhileStatement :: Parser ASTWhileStatement
-parseWhileStatement = 
+parseWhileStatement =
     trace
         "parseWhileStatement"
         (
@@ -866,12 +866,12 @@ parseWhileStatement =
                 x1 <- parseStatement
                 return (x0,x1)
         )
-        
+
 -- Corresponds to for_statement.
 -- FOR identifier ASSIGN expression (TO|DOWN_TO) expression DO statement
 type ASTForStatement = (ASTIdentifier, ASTExpression, ASTExpression, ASTStatement)
 parseForStatement :: Parser ASTForStatement
-parseForStatement = 
+parseForStatement =
     trace
         "parseForStatement"
         (
@@ -884,12 +884,12 @@ parseForStatement =
                     [
                         try
                         (
-                        do 
+                        do
                             parseTokenTo
                         ),
                         do
                             parseTokenDownTo
-                        
+
                     ]
                 x2 <- parseExpression
                 parseTokenDo
@@ -898,12 +898,12 @@ parseForStatement =
 
 
         )
- 
+
 -- Expressions section.
 --expression: simple expression [relational_operator simple_expression]
 type ASTExpression = (ASTSimpleExpression, Maybe (ASTRelationalOperator, ASTSimpleExpression))
 parseExpression :: Parser ASTExpression
-parseExpression = 
+parseExpression =
     trace
         "parseExpression"
         (
@@ -983,12 +983,12 @@ parseRelationalOperator =
 --    : [sign] term {adding_operator term}
 type ASTSimpleExpression = ((Maybe (ASTSign)), ASTTerm, [(ASTAddingOperator, ASTTerm)])
 parseSimpleExpression :: Parser ASTSimpleExpression
-parseSimpleExpression = 
+parseSimpleExpression =
     trace
         "parseSimpleExpression"
         (
             do
-                x0 <- 
+                x0 <-
                     optionMaybe
                     (
                         try
@@ -999,7 +999,7 @@ parseSimpleExpression =
                         )
                     )
                 x1 <- parseTerm
-                x2 <- 
+                x2 <-
                     many
                     (
                         try
@@ -1013,14 +1013,14 @@ parseSimpleExpression =
                 return (x0,x1,x2)
         )
 
--- Corresponds to adding operators. 
+-- Corresponds to adding operators.
 --adding_operator
 --    : PLUS
 --    | MINUS
 --    | OR
 --    ;
 type ASTAddingOperator = AddingOperator
-data AddingOperator = 
+data AddingOperator =
     AddOpPlus |
     AddOpMinus |
     AddOpOr
@@ -1043,7 +1043,7 @@ parseAddingOperator =
                             parseTokenMinus
                             return AddOpMinus
                         ),
-                    
+
                     do
                         parseTokenOr
                         return AddOpOr
@@ -1073,9 +1073,9 @@ parseTerm =
                 return (x0, x1)
             )
 
--- Corresponds to multiplying_operator. 
+-- Corresponds to multiplying_operator.
 type ASTMultOperator = MultOperator
-data MultOperator = 
+data MultOperator =
     MultOpTimes |
     MultOpDivideBy |
     MultOpDiv |
@@ -1102,7 +1102,7 @@ parseMultOperator =
                         ),
                     try (
                         do
-                            parseTokenDivideBy                     
+                            parseTokenDivideBy
                             return MultOpDivideBy
                         ),
                     try (
@@ -1124,7 +1124,7 @@ parseMultOperator =
 --    | NOT factor
 --    ;
 type ASTFactor = Factor
-data Factor = 
+data Factor =
     UnsignedConstantFactor ASTUnsignedConstant |
     VariableAccessFactor ASTVariableAccess |
     ExpressionFactor ASTExpression |
@@ -1143,14 +1143,14 @@ parseFactor =
                             x<-parseUnsignedConstant
                             return (UnsignedConstantFactor x)
                         ),
-                    
+
                     -- variable_access
                     try (
                         do
                             x<-parseVariableAccess
                             return (VariableAccessFactor x)
                         ),
-                    
+
                     -- LEFT_PARENTHESIS expression RIGHT_PARENTHESIS
                     try (
                         do
@@ -1160,9 +1160,9 @@ parseFactor =
                             return (ExpressionFactor x)
                         ),
                     do
-                        parseTokenNot 
+                        parseTokenNot
                         x <- parseFactor
-                        return (FactorFactor x) 
+                        return (FactorFactor x)
                     ]
             )
 
@@ -1192,7 +1192,7 @@ parseUnsignedConstant =
                         x <- parseCharacterString
                         return (CharacterStringConstant x)
                     ]
-            ) 
+            )
 
 --unsigned_number
 --    : unsigned_integer
@@ -1247,24 +1247,24 @@ parseVariableAccess =
                             x<-parseIndexedVariable
                             return (IndexedVariableVariableAccess x)
                         ),
-                    
+
                     -- TODO: somehow got to make this after indexed_variable
                     do
                         x<-parseIdentifier
                         return (IdenfierVariableAccess x)
-                    
+
                     ]
             )
 
 -- indexed variable: identifier LEFT_BRACKET expression RIGHT_BRACKET
 type ASTIndexedVariable = (ASTIdentifier, ASTExpression)
 parseIndexedVariable :: Parser ASTIndexedVariable
-parseIndexedVariable = 
+parseIndexedVariable =
     trace
         "parseIndexedVariable"
         (
             do
-                x0 <- 
+                x0 <-
                     parseIdentifier
                 parseTokenLeftBracket
                 x1 <-
@@ -1546,5 +1546,3 @@ parseSign =
                         return SignMinus
                     ]
             )
-
-
