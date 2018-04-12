@@ -1,5 +1,6 @@
 module PazPrettyPrinter where
 
+import Debug.Trace (trace)
 import PazLexer
 import PazParser
 import System.Environment
@@ -10,9 +11,10 @@ indentSpacing = 4
 -- Maps ASTs to Pretty Printed Paz programs.
 prettyPrint :: PazParser.ASTStartSymbol -> IO ()
 prettyPrint (programname, variables, procedures, compound) = do
-  printf "program %s;\n" programname
+  printf "program %s;\n\n" programname
   ppVariableDecPart variables
   ppProcedureDecPart procedures
+  putStr "\n"
   ppCompound compound indentSpacing
   putStr ".\n"
 
@@ -84,7 +86,7 @@ ppVariableDecList ((identifiers, types):vs) = do
 ppVariableDecPart :: PazParser.ASTVariableDeclarationPart -> IO ()
 ppVariableDecPart Nothing = return ()
 ppVariableDecPart (Just variables) = do
-  printf "\nvar\n"
+  printf "var\n"
   ppVariableDecList variables
 
 --------------------------------------------------------------------------------
@@ -106,16 +108,16 @@ ppFormalParamList (x:xs) = (ppParamSection x) ++ "; " ++ (ppFormalParamList xs)
 -- Pretty Print Procedure Declarations
 ppProcedureDec :: PazParser.ASTProcedureDeclaration -> IO ()
 ppProcedureDec (ident, (Nothing), vardecpart, compound) = do
-  printf ("\nprocedure " ++ (ppIdentifier ident) ++ ";")
+  printf ("\nprocedure " ++ (ppIdentifier ident) ++ ";\n")
   ppVariableDecPart vardecpart
   ppCompound compound indentSpacing
-  putStr ";\n"
+  putStr ";"
 ppProcedureDec (ident, (Just paramlist), vardecpart, compound) = do
   putStr ("\nprocedure " ++
-    (ppIdentifier ident) ++ "(" ++ (ppFormalParamList paramlist) ++ ");")
+    (ppIdentifier ident) ++ "(" ++ (ppFormalParamList paramlist) ++ ");\n")
   ppVariableDecPart vardecpart
   ppCompound compound indentSpacing
-  putStr ";\n"
+  putStr ";"
 
 -- Pretty Print Procedure Declaration Part
 ppProcedureDecPart :: [PazParser.ASTProcedureDeclaration] -> IO ()
@@ -383,7 +385,7 @@ ppForStmt (ident, expr1, expr2, stmt) indent = do
 ppStatement :: PazParser.ASTStatement -> Int -> IO ()
 ppStatement s indent = do
   case s of
-    AssignmentStatement as -> ppAssignmentStmt as indent
+    AssignmentStatement assigs -> ppAssignmentStmt assigs indent
     ProcedureStatement ps -> ppProcedureStmt ps indent
     CompoundStatement cs -> ppCompound cs indent
     IfStatement is -> ppIfStmt is indent

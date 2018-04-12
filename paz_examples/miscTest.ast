@@ -1,0 +1,96 @@
+(
+	"misctest",
+	Just [
+		(("id",[]),OrdinaryTypeDenoter IntegerTypeIdentifier),
+		(("f",[]),OrdinaryTypeDenoter BooleanTypeIdentifier)
+	],
+	[
+		(
+			"boo",
+			Nothing,
+			Just [
+				(("a",[]),ArrayTypeDenoter (((Nothing,"3"),(Nothing,"5")),IntegerTypeIdentifier)),
+				(("b",[]),ArrayTypeDenoter (((Nothing,"5"),(Nothing,"23")),IntegerTypeIdentifier))
+			],
+			[WhileStatement (
+				(
+					(Nothing,(VariableAccessFactor (IndexedVariableVariableAccess ("b",((Nothing,(UnsignedConstantFactor (UnsignedNumberConstant (UnsignedInteger 5)),[]),[]),Nothing))),[]),[]),
+					Just (ROGreaterThanOrEqual,(Nothing,(ExpressionFactor ((Nothing,(UnsignedConstantFactor (UnsignedNumberConstant (UnsignedInteger 0)),[]),[]),Nothing),[]),[]))
+				),
+				ProcedureStatement ("read",Just [((Nothing,(VariableAccessFactor (IndexedVariableVariableAccess ("a",((Nothing,(UnsignedConstantFactor (UnsignedNumberConstant (UnsignedInteger 4)),[]),[]),Nothing))),[]),[]),Nothing)]))
+			]
+		),
+		(
+			"foo",
+			Just [(False,("k",[]),OrdinaryTypeDenoter RealTypeIdentifier)],
+			Just [(("ifigenia",[]),OrdinaryTypeDenoter IntegerTypeIdentifier),(("t",[]),OrdinaryTypeDenoter BooleanTypeIdentifier)],
+			[AssignmentStatement (
+				VariableAcessAssignmentStatement (IdenfierVariableAccess "ifigenia"),
+				(
+					(
+						Nothing,
+						(ExpressionFactor 
+							((Nothing,(UnsignedConstantFactor (UnsignedNumberConstant (UnsignedInteger 4)),[]),[]),Nothing),[]),
+						[
+							(AddOpPlus,(UnsignedConstantFactor (UnsignedNumberConstant (UnsignedInteger 5)),[])),
+							(AddOpMinus,(UnsignedConstantFactor (UnsignedNumberConstant (UnsignedInteger 9)),[(MultOpTimes,ExpressionFactor ((Just SignMinus,(UnsignedConstantFactor (UnsignedNumberConstant (UnsignedInteger 1)),[]),[(AddOpPlus,(UnsignedConstantFactor (UnsignedNumberConstant (UnsignedInteger 3)),[]))]),Nothing))]))
+						]
+					),
+					Nothing
+				)
+			)]
+		),
+		("goo",Just [(True,("q",[]),OrdinaryTypeDenoter BooleanTypeIdentifier),(True,("m",[]),OrdinaryTypeDenoter IntegerTypeIdentifier),(False,("n",[]),OrdinaryTypeDenoter RealTypeIdentifier)],Just [(("arr",[]),ArrayTypeDenoter (((Nothing,"9"),(Nothing,"2")),RealTypeIdentifier)),(("matrix",[]),ArrayTypeDenoter (((Nothing,"0"),(Nothing,"4")),IntegerTypeIdentifier))],[IfStatement (((Nothing,(ExpressionFactor ((Nothing,(VariableAccessFactor (IdenfierVariableAccess "m"),[]),[(AddOpMinus,(UnsignedConstantFactor (UnsignedNumberConstant (UnsignedInteger 2)),[]))]),Nothing),[]),[]),Just (ROLessThan,(Nothing,(UnsignedConstantFactor (UnsignedNumberConstant (UnsignedInteger 3)),[(MultOpTimes,UnsignedConstantFactor (UnsignedNumberConstant (UnsignedInteger 8)))]),[]))),AssignmentStatement (VariableAcessAssignmentStatement (IndexedVariableVariableAccess ("matrix",((Nothing,(UnsignedConstantFactor (UnsignedNumberConstant (UnsignedInteger 2)),[]),[]),Nothing))),((Nothing,(UnsignedConstantFactor (UnsignedNumberConstant (UnsignedInteger 7)),[]),[]),Nothing)),Nothing)])
+		],
+		[
+			AssignmentStatement (
+				VariableAcessAssignmentStatement (IdenfierVariableAccess "id"),
+				(
+					(
+						Nothing,
+						(
+							UnsignedConstantFactor (UnsignedNumberConstant (UnsignedInteger 5)),
+							[
+								(
+									MultOpTimes,
+									ExpressionFactor (
+										(
+											Nothing,
+											(UnsignedConstantFactor (UnsignedNumberConstant (UnsignedInteger 2)),[]),
+											[
+												(
+													AddOpPlus,
+													(UnsignedConstantFactor (UnsignedNumberConstant (UnsignedInteger 1)),[])
+												)
+											]
+										),
+										Nothing
+									)
+								),
+								(
+									MultOpTimes,
+									ExpressionFactor (
+										(
+											Nothing,
+											(UnsignedConstantFactor (UnsignedNumberConstant (UnsignedInteger 1)),[]),
+											[(AddOpPlus,(UnsignedConstantFactor (UnsignedNumberConstant (UnsignedInteger 3)),[]))]
+										),
+										Nothing
+									)
+								)
+							]
+						),
+						[]
+					),
+					Nothing
+				)
+			),
+			AssignmentStatement (VariableAcessAssignmentStatement (IdenfierVariableAccess "f"),((Nothing,(FactorFactor (ExpressionFactor ((Nothing,(VariableAccessFactor (IdenfierVariableAccess "false"),[(MultOpAnd,VariableAccessFactor (IdenfierVariableAccess "true"))]),[]),Nothing)),[]),[(AddOpOr,(VariableAccessFactor (IdenfierVariableAccess "false"),[]))]),Nothing)),
+			ProcedureStatement ("read",Just [((Nothing,(VariableAccessFactor (IdenfierVariableAccess "f"),[]),[]),Nothing)]),
+			ProcedureStatement ("write",Just [((Nothing,(UnsignedConstantFactor (CharacterStringConstant "strings allowed in write"),[]),[]),Nothing)]),
+			IfStatement (((Nothing,(VariableAccessFactor (IdenfierVariableAccess "f"),[]),[]),Just (RONotEqual,(Nothing,(VariableAccessFactor (IdenfierVariableAccess "false"),[]),[]))),CompoundStatement [AssignmentStatement (VariableAcessAssignmentStatement (IdenfierVariableAccess "id"),((Nothing,(ExpressionFactor ((Nothing,(ExpressionFactor ((Nothing,(ExpressionFactor ((Nothing,(UnsignedConstantFactor (UnsignedNumberConstant (UnsignedInteger 9)),[]),[(AddOpMinus,(UnsignedConstantFactor (UnsignedNumberConstant (UnsignedInteger 1)),[]))]),Nothing),[]),[]),Nothing),[]),[]),Nothing),[(MultOpTimes,UnsignedConstantFactor (UnsignedNumberConstant (UnsignedInteger 3)))]),[]),Nothing)),AssignmentStatement (VariableAcessAssignmentStatement (IdenfierVariableAccess "f"),((Nothing,(FactorFactor (VariableAccessFactor (IdenfierVariableAccess "false")),[]),[]),Nothing))],Just (AssignmentStatement (VariableAcessAssignmentStatement (IdenfierVariableAccess "f"),((Nothing,(VariableAccessFactor (IdenfierVariableAccess "true"),[]),[(AddOpOr,(VariableAccessFactor (IdenfierVariableAccess "true"),[]))]),Nothing)))),
+			ProcedureStatement ("boo",Nothing),
+			ProcedureStatement ("foo",Just [((Nothing,(UnsignedConstantFactor (UnsignedNumberConstant (UnsignedReal ("1",Just "08",Nothing))),[]),[]),Nothing)]),
+			ProcedureStatement ("goo",Just [((Nothing,(VariableAccessFactor (IdenfierVariableAccess "true"),[]),[]),Nothing),((Nothing,(UnsignedConstantFactor (UnsignedNumberConstant (UnsignedInteger 55)),[]),[]),Nothing),((Nothing,(UnsignedConstantFactor (UnsignedNumberConstant (UnsignedReal ("90058",Just "783",Nothing))),[]),[]),Nothing)])
+		]
+)
