@@ -11,10 +11,9 @@ indentSpacing = 4
 -- Maps ASTs to Pretty Printed Paz programs.
 prettyPrint :: PazParser.ASTStartSymbol -> IO ()
 prettyPrint (programname, variables, procedures, compound) = do
-  printf "program %s;\n\n" programname
-  ppVariableDecPart variables
+  printf "program %s;\n" programname
+  ppProgramVariableDecPart variables
   ppProcedureDecPart procedures
-  putStr "\n"
   ppCompound compound indentSpacing
   putStr ".\n"
 
@@ -86,8 +85,16 @@ ppVariableDecList ((identifiers, types):vs) = do
 ppVariableDecPart :: PazParser.ASTVariableDeclarationPart -> IO ()
 ppVariableDecPart Nothing = return ()
 ppVariableDecPart (Just variables) = do
-  printf "var\n"
+  printf "\nvar\n"
   ppVariableDecList variables
+
+-- Pretty Print Program Variable Declaration Part
+ppProgramVariableDecPart :: PazParser.ASTVariableDeclarationPart -> IO ()
+ppProgramVariableDecPart Nothing = return ()
+ppProgramVariableDecPart vardecpart = do
+  ppVariableDecPart vardecpart
+  putStr "\n"
+
 
 --------------------------------------------------------------------------------
 -- Procedure Declaration Part
@@ -108,16 +115,16 @@ ppFormalParamList (x:xs) = (ppParamSection x) ++ "; " ++ (ppFormalParamList xs)
 -- Pretty Print Procedure Declarations
 ppProcedureDec :: PazParser.ASTProcedureDeclaration -> IO ()
 ppProcedureDec (ident, (Nothing), vardecpart, compound) = do
-  printf ("\nprocedure " ++ (ppIdentifier ident) ++ ";\n")
+  printf ("procedure " ++ (ppIdentifier ident) ++ ";")
   ppVariableDecPart vardecpart
   ppCompound compound indentSpacing
-  putStr ";"
+  putStr ";\n"
 ppProcedureDec (ident, (Just paramlist), vardecpart, compound) = do
-  putStr ("\nprocedure " ++
-    (ppIdentifier ident) ++ "(" ++ (ppFormalParamList paramlist) ++ ");\n")
+  putStr ("procedure " ++
+    (ppIdentifier ident) ++ "(" ++ (ppFormalParamList paramlist) ++ ");")
   ppVariableDecPart vardecpart
   ppCompound compound indentSpacing
-  putStr ";"
+  putStr ";\n"
 
 -- Pretty Print Procedure Declaration Part
 ppProcedureDecPart :: [PazParser.ASTProcedureDeclaration] -> IO ()
@@ -126,6 +133,10 @@ ppProcedureDecPart (p:ps) = do
   putStr "\n"
   ppProcedureDec p
   ppProcedureDecPart ps
+  
+{-ppProcedureDecSequence :: [PazParser.ASTProcedureDeclaration] -> IO ()
+ppProcedureDecSequence [] = return ()
+ppProcedureDecSequence (p:ps) = do-}
 
 --------------------------------------------------------------------------------
 -- ASTCompoundStatement
@@ -391,7 +402,7 @@ ppStatement s indent = do
     IfStatement is -> ppIfStmt is indent
     WhileStatement ws -> ppWhileStmt ws indent
     ForStatement fs -> ppForStmt fs indent
-    EmptyStatement -> return () --putStr ";\n"
+    EmptyStatement -> putStr "\n"
 
 -- Pretty Print Statement Sequences
 ppStatementSequence :: PazParser.ASTStatementSequence -> Int -> IO ()
