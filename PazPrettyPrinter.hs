@@ -27,12 +27,11 @@ ppSign s =
     PazParser.SignPlus -> "+"
     PazParser.SignMinus -> "-"
 
-
 -- Pretty Print Signs (from PazLexer)
 ppLexSign :: PazLexer.ASTSign -> String
 ppLexSign s =
   case s of
-    azLexer.SignPlus -> "+"
+    PazLexer.SignPlus -> "+"
     PazLexer.SignMinus -> "-"
 
 -- Pretty Print Constants
