@@ -9,8 +9,6 @@ import System.Environment
 
 import Text.Printf
 
-
-
 die :: String -> IO ()
 die err = do
     hPutStrLn stderr err
