@@ -1,2 +1,2 @@
 Paz: Paz.hs
-	ghc -o -dynamic Paz Paz.hs
+	ghc --make Paz.hs
