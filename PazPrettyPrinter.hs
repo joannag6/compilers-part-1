@@ -24,14 +24,14 @@ prettyPrint (programname, variables, procedures, compound) = do
 ppSign :: PazParser.ASTSign -> String
 ppSign s =
   case s of
-    PazParser.SignPlus -> "+"
+    PazParser.SignPlus  -> "+"
     PazParser.SignMinus -> "-"
 
 -- Pretty Print Signs (from PazLexer)
 ppLexSign :: PazLexer.ASTSign -> String
 ppLexSign s =
   case s of
-    PazLexer.SignPlus -> "+"
+    PazLexer.SignPlus  -> "+"
     PazLexer.SignMinus -> "-"
 
 -- Pretty Print Constants
@@ -53,7 +53,7 @@ ppTypeIdentifier :: PazParser.ASTTypeIdentifier -> String
 ppTypeIdentifier ti =
   case ti of
     IntegerTypeIdentifier -> "integer"
-    RealTypeIdentifier -> "real"
+    RealTypeIdentifier    -> "real"
     BooleanTypeIdentifier -> "boolean"
 
 -- Pretty Print Type Denoters
@@ -61,7 +61,7 @@ ppTypeDenoter :: PazParser.ASTTypeDenoter -> String
 ppTypeDenoter td =
   case td of
     OrdinaryTypeDenoter t -> (ppTypeIdentifier t)
-    ArrayTypeDenoter t -> "array" ++ (ppArrayType t)
+    ArrayTypeDenoter t    -> "array" ++ (ppArrayType t)
 
 -- Pretty Print Identifiers
 ppIdentifier :: PazLexer.ASTIdentifier -> String
@@ -133,7 +133,7 @@ ppProcedureDecPart (p:ps) = do
   putStr "\n"
   ppProcedureDec p
   ppProcedureDecPart ps
-  
+
 {-ppProcedureDecSequence :: [PazParser.ASTProcedureDeclaration] -> IO ()
 ppProcedureDecSequence [] = return ()
 ppProcedureDecSequence (p:ps) = do-}
@@ -173,40 +173,40 @@ ppUnsignedNum :: PazParser.ASTUnsignedNumber -> IO ()
 ppUnsignedNum n =
   case n of
     UnsignedInteger i -> putStr (show i)
-    UnsignedReal r -> ppUnsignedReal r
+    UnsignedReal r    -> ppUnsignedReal r
 
 -- Pretty Print Unsigned Constants
 ppUnsignedConstant :: PazParser.ASTUnsignedConstant -> IO ()
 ppUnsignedConstant c =
   case c of
-    UnsignedNumberConstant n -> ppUnsignedNum n
+    UnsignedNumberConstant n  -> ppUnsignedNum n
     CharacterStringConstant s -> putStr ("'" ++ s ++ "'")
 
 -- Pretty Print Adding Operators
 ppAddingOperator :: PazParser.ASTAddingOperator -> IO ()
 ppAddingOperator a =
   case a of
-    AddOpPlus -> putStr " + "
+    AddOpPlus  -> putStr " + "
     AddOpMinus -> putStr " - "
-    AddOpOr -> putStr " or "
+    AddOpOr    -> putStr " or "
 
 -- Pretty Print Multiplying Operators
 ppMultOperator :: PazParser.ASTMultOperator -> IO ()
 ppMultOperator m =
   case m of
-    MultOpTimes -> putStr " * "
+    MultOpTimes    -> putStr " * "
     MultOpDivideBy -> putStr " / "
-    MultOpDiv -> putStr " div "
-    MultOpAnd -> putStr " and "
+    MultOpDiv      -> putStr " div "
+    MultOpAnd      -> putStr " and "
 
 -- Pretty Print Factors
 ppFactor :: PazParser.ASTFactor -> PrevSign -> IO ()
 ppFactor f prev =
   case f of
     UnsignedConstantFactor cf -> ppUnsignedConstant cf
-    VariableAccessFactor va -> ppVariableAccess va
-    ExpressionFactor ef -> ppExpression ef prev
-    FactorFactor ff -> do
+    VariableAccessFactor va   -> ppVariableAccess va
+    ExpressionFactor ef       -> ppExpression ef prev
+    FactorFactor ff           -> do
       putStr "not "
       ppFactor ff NotOp
 
@@ -268,11 +268,11 @@ ppSimpleExpression ((Just sign), term, terms) prev = do
 ppRelOperator :: PazParser.ASTRelationalOperator -> IO ()
 ppRelOperator r =
   case r of
-    ROEqual -> putStr " = "
-    RONotEqual -> putStr " <> "
-    ROLessThan -> putStr " < "
-    ROGreaterThan -> putStr " > "
-    ROLessThanOrEqual -> putStr " <= "
+    ROEqual              -> putStr " = "
+    RONotEqual           -> putStr " <> "
+    ROLessThan           -> putStr " < "
+    ROGreaterThan        -> putStr " > "
+    ROLessThanOrEqual    -> putStr " <= "
     ROGreaterThanOrEqual -> putStr " >= "
 
 -- Pretty Print Expressions
@@ -320,7 +320,7 @@ ppVariableAccess :: PazParser.ASTVariableAccess -> IO ()
 ppVariableAccess v =
   case v of
     IndexedVariableVariableAccess va -> ppIndexedVariable va
-    IdenfierVariableAccess i -> putStr (ppIdentifier i)
+    IdenfierVariableAccess i         -> putStr (ppIdentifier i)
 
 -- Pretty Print Procedure Statements
 ppProcedureStmt :: PazParser.ASTProcedureStatement -> Int -> IO ()
@@ -343,7 +343,7 @@ ppAssignmentStmt (variable, expression) indent = do
   ppIndent indent
   case variable of
     VariableAcessAssignmentStatement va ->  ppVariableAccess va
-    IdentifierAssignmentStatement i -> putStr (ppIdentifier i)
+    IdentifierAssignmentStatement i     -> putStr (ppIdentifier i)
   putStr " := "
   ppExpression expression Empty
 
@@ -397,12 +397,12 @@ ppStatement :: PazParser.ASTStatement -> Int -> IO ()
 ppStatement s indent = do
   case s of
     AssignmentStatement assigs -> ppAssignmentStmt assigs indent
-    ProcedureStatement ps -> ppProcedureStmt ps indent
-    CompoundStatement cs -> ppCompound cs indent
-    IfStatement is -> ppIfStmt is indent
-    WhileStatement ws -> ppWhileStmt ws indent
-    ForStatement fs -> ppForStmt fs indent
-    EmptyStatement -> putStr "\n"
+    ProcedureStatement ps      -> ppProcedureStmt ps indent
+    CompoundStatement cs       -> ppCompound cs indent
+    IfStatement is             -> ppIfStmt is indent
+    WhileStatement ws          -> ppWhileStmt ws indent
+    ForStatement fs            -> ppForStmt fs indent
+    EmptyStatement             -> putStr "\n"
 
 -- Pretty Print Statement Sequences
 ppStatementSequence :: PazParser.ASTStatementSequence -> Int -> IO ()
