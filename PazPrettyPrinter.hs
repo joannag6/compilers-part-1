@@ -134,10 +134,6 @@ ppProcedureDecPart (p:ps) = do
   ppProcedureDec p
   ppProcedureDecPart ps
 
-{-ppProcedureDecSequence :: [PazParser.ASTProcedureDeclaration] -> IO ()
-ppProcedureDecSequence [] = return ()
-ppProcedureDecSequence (p:ps) = do-}
-
 --------------------------------------------------------------------------------
 -- ASTCompoundStatement
 --------------------------------------------------------------------------------
@@ -233,52 +229,33 @@ ppTermList ((addop, term):ts) = do
   ppTerm term AddOp
   ppTermList ts
 
-
 -- Pretty Print Simple Expressions
 ppSimpleExpression :: PazParser.ASTSimpleExpression -> PrevSign -> IO ()
--- TODO: for our paren issues, this gets called for all the boolean ones, i think.
 ppSimpleExpression ((Nothing), term, []) prev = do
   ppTerm term Empty
-
-
--- maybe delete
 ppSimpleExpression ((Just sign), (factor, []), []) prev = do
   putStr (ppSign sign)
   case sign of
     PazParser.SignMinus -> do
-      -- TODO it is here.
       case factor of
         ExpressionFactor ef -> do
-          -- TODO HERE: it now does -(y) for all y,
-          -- the problem is, if y looks like (2*3*4), we do not want
-          -- the paran.
-          -- If y looks like (2 + 3 + 4), we want the paran.
-          -- Best I could figure out is, if it is a list of terms,
-          -- it will look like 2+3+4 and then we shd put in the paran.
-          -- else, we do not want to put in paran.
           putStr "("
           ppTerm (factor, []) Empty
           putStr ")"
         _ -> do
           ppTerm (factor, []) Empty
-
     _ -> do
       ppTerm (factor, []) Empty
-
--- NOt sure if this is necessary TODO
 ppSimpleExpression ((Just sign), term, []) prev = do
-
   putStr (ppSign sign)
   ppTerm term Empty
-
-
 ppSimpleExpression ((Nothing), term, terms) prev = do
-  if prev == Empty || prev == AddOp -- PROBLEM
+  if prev == Empty || prev == AddOp
     then do
       ppTerm term AddOp
       ppTermList terms
     else do
-      putStr "(" -- PROBLEM
+      putStr "("
       ppTerm term AddOp
       ppTermList terms
       putStr ")"
@@ -290,7 +267,7 @@ ppSimpleExpression ((Just sign), term, terms) prev = do
       ppTermList terms
     else do
       putStr (ppSign sign)
-      putStr "(" -- PROBLEM
+      putStr "("
       ppTerm term AddOp
       ppTermList terms
       putStr ")"
@@ -313,9 +290,9 @@ ppExpression (simple, Nothing) prev = do
     then do
       ppSimpleExpression simple prev
     else do
-      putStr "(" --PROBLEM
+      putStr "("
       ppSimpleExpression simple Empty
-      putStr ")" -- PROBLEM
+      putStr ")"
 ppExpression (simple, (Just (relop, simple2))) prev = do
 
   if prev == Empty
@@ -324,11 +301,11 @@ ppExpression (simple, (Just (relop, simple2))) prev = do
       ppRelOperator relop
       ppSimpleExpression simple2 prev
     else do
-      putStr "("    -- PROBLEM
+      putStr "("
       ppSimpleExpression simple Empty
       ppRelOperator relop
       ppSimpleExpression simple2 Empty
-      putStr ")"     --PROBLEM
+      putStr ")"
 
 -- Pretty Print Actual Parameters for Procedure Statements
 ppActualParamList :: PazParser.ASTActualParameterList -> IO ()
