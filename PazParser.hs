@@ -682,16 +682,6 @@ parseStatementSequence =
                 return (x0:x1)
         )
 
---corresponds to statement in PazParserBNF.txt
--- TODO: Needs empty statement.
--- statement
---  : assignment_statement
---  | procedure_statement -- must go after assignment_statement
---  | compound_statement
---  | if_statement
---  | while_statement
---  | for_statement
---  | empty_statement     -- must go at the end.
 type ASTStatement = Statement
 data Statement =
     AssignmentStatement ASTAssignmentStatement |
@@ -1050,9 +1040,25 @@ parseAddingOperator =
                     ]
             )
 
+
 --term
 --    : factor {multiplying_operator factor}
+-- Add a stupid type here to fix the pretty printer TODO
 type ASTTerm = (ASTFactor, [(ASTMultOperator, ASTFactor)])
+
+type CSTTerm = Term
+data Term = TermCons 
+parseCSTTerm :: Parser CSTTerm
+parseCSTTerm =
+    trace
+        "parseCSTTerm"
+        (
+            do    
+                x<-parseTerm
+                return (TermCons)
+        )
+
+
 parseTerm :: Parser ASTTerm
 parseTerm =
     trace
@@ -1068,9 +1074,10 @@ parseTerm =
                                 x2 <- parseMultOperator
                                 x3 <- parseFactor
                                 return (x2,x3)
+                                
                             )
                         )
-                return (x0, x1)
+                return (x0,x1)
             )
 
 -- Corresponds to multiplying_operator.
@@ -1248,7 +1255,6 @@ parseVariableAccess =
                             return (IndexedVariableVariableAccess x)
                         ),
 
-                    -- TODO: somehow got to make this after indexed_variable
                     do
                         x<-parseIdentifier
                         return (IdenfierVariableAccess x)

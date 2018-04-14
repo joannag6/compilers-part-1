@@ -10,6 +10,14 @@ begin
         result := 1
     else
     begin
+        n := (n / 2) * 2;
+        n := ((true and false)) and ((true or false or true));
+        n := true and false and true or (false or true);
+        n := -(5 - 2 - 1);
+        n := -5 - (2 - 1);
+        n := 5 + (2 + 1);
+        n := 5 + (2) + 1;
+        n := (5) + (-2) + 1;
         fact(n - 1, result);
         result := n * result
     end
