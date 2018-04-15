@@ -16,6 +16,18 @@ begin
         n := -(5 - 2 - 1);
         n := -5 - (2 - 1);}
 
+        n := not false and true;
+        n := (((not false))) and true;
+        n := not (false and true);
+        n := not (false or true);
+        n := not (false);
+        n := not (((false and true)));
+        n := not (((2 > 1)));
+        n := not 2 > 1;
+        n := (2 < 1) and (3 > 2);
+        n := (false and true) or (true and false);
+        n := (false or true) and (true or false);
+
         n := 4 - (4 + 1);
         n := 4 - (4 - 1);
         n := 4 - 4 - 1;

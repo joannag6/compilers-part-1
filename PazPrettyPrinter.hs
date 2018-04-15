@@ -219,13 +219,22 @@ ppFactorList ((mulop, factor):fs) = do
 -- Pretty Print Terms
 ppTerm :: PazParser.ASTTerm -> PrevSign -> IO ()
 ppTerm (factor, []) prev = do
-  if prev == NotOp || prev == MinUnOp || prev == MinBinOp then do
+  if prev == MinUnOp || prev == MinBinOp then do
     ppFactor factor prev
   else do
-    ppFactor factor Empty
+    if prev == NotOp then do
+      ppFactor factor prev
+    else do
+      ppFactor factor Empty
 ppTerm (factor, factors) prev = do
-  ppFactor factor MulOp -- more than one factors, so should be MulOp-ed
-  ppFactorList factors
+  if prev == NotOp then do
+    putStr "("
+    ppFactor factor MulOp -- more than one factors, so should be MulOp-ed
+    ppFactorList factors
+    putStr ")"
+  else do
+    ppFactor factor MulOp -- more than one factors, so should be MulOp-ed
+    ppFactorList factors
 
 -- Pretty Print Term Lists
 ppTermList :: [(ASTAddingOperator, ASTTerm)] -> IO ()
@@ -241,6 +250,12 @@ ppTermList ((addop, term):ts) = do
 -- TODO ((Maybe (ASTSign)), ASTTerm, [(ASTAddingOperator, ASTTerm)])
 ppSimpleExpression :: PazParser.ASTSimpleExpression -> PrevSign -> IO ()
 ppSimpleExpression ((Nothing), term, []) prev = do
+  -- print term
+  -- if prev == NotOp then do
+  --   putStr "("
+  --   ppTerm term Empty
+  --   putStr ")"
+  -- else do
   ppTerm term prev
 ppSimpleExpression ((Just sign), term, []) prev = do
   putStr (ppSign sign)
@@ -286,19 +301,26 @@ ppRelOperator r =
 -- TODO simple expression [relational_operator simple_expression]
 ppExpression :: PazParser.ASTExpression -> PrevSign -> IO ()
 ppExpression (simple, Nothing) prev = do
+  ppSimpleExpression simple prev
+
   -- if prev == Empty
     -- then do
-      ppSimpleExpression simple prev
+      -- ppSimpleExpression simple prev
     -- else do
       -- putStr "("
       -- ppSimpleExpression simple Empty
       -- putStr ")"
 ppExpression (simple, (Just (relop, simple2))) prev = do
-  -- if prev == Empty
-  --   then do
-      ppSimpleExpression simple prev
-      ppRelOperator relop
-      ppSimpleExpression simple2 prev
+  if prev == NotOp then do
+    putStr "("
+    ppSimpleExpression simple Empty
+    ppRelOperator relop
+    ppSimpleExpression simple2 Empty
+    putStr ")"
+  else do
+    ppSimpleExpression simple prev
+    ppRelOperator relop
+    ppSimpleExpression simple2 prev
     -- else do
     --   putStr "("
     --   ppSimpleExpression simple Empty
