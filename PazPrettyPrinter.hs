@@ -232,7 +232,9 @@ ppTermList :: [(ASTAddingOperator, ASTTerm)] -> IO ()
 ppTermList [] = return ()
 ppTermList ((addop, term):ts) = do
   ppAddingOperator addop -- TODO check type of addop - determines if AddOp or MinOp
-  ppTerm term AddOp
+  case addop of
+    AddOpMinus -> ppTerm term MinBinOp
+    _          -> ppTerm term AddOp
   ppTermList ts
 
 -- Pretty Print Simple Expressions
@@ -248,7 +250,7 @@ ppSimpleExpression ((Just sign), term, []) prev = do
     _ -> do
       ppTerm term Empty
 ppSimpleExpression ((Nothing), term, terms) prev = do
-  if prev == MinUnOp || prev == MulOp || prev == NotOp
+  if prev == MinUnOp || prev == MulOp || prev == NotOp || prev == MinBinOp
     then do
       putStr "("
       ppTerm term AddOp -- or Empty?
@@ -259,7 +261,7 @@ ppSimpleExpression ((Nothing), term, terms) prev = do
       ppTermList terms
 ppSimpleExpression ((Just sign), term, terms) prev = do
   putStr (ppSign sign)
-  if prev == MinUnOp || prev == MulOp || prev == NotOp
+  if prev == MinUnOp || prev == MulOp || prev == NotOp || prev == MinBinOp
     then do
       putStr "("
       ppTerm term AddOp
