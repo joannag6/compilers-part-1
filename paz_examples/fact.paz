@@ -6,7 +6,7 @@ var
 
 procedure fact(n: integer; var result: integer);
 begin
-    if (n = 0) then
+    {if (n = 0) then
         result := 1
     else
     begin
@@ -14,19 +14,33 @@ begin
         n := ((true and false)) and ((true or false or true));
         n := true and false and true or (false or true);
         n := -(5 - 2 - 1);
-        n := -5 - (2 - 1);
-        n := 5 + (2 + 1);
+        n := -5 - (2 - 1);}
+
+        n := -((5 + 2));
+        n := -((((5))));
+        n := -(5);
+        n := -(5) + (2);
+        n := (((-5 + 2)));
+        n := (((-5))) + (2);
+        n := (((-5))) + (-2);
+        n := (5 + 2);
+        n := 5 * 2;
+        n := (5 * 3) + 2;
+        n := 5 * (3 + 2);
+        n := 5 * (-3);
+
+        {n := 5 + (2 + 1);
         n := 5 + (2) + 1;
         n := (5) + (-2) + 1;
         fact(n - 1, result);
         result := n * result
-    end
+    end}
 end;
 
 begin
-    for n := 0 to 16 do
+    {for n := 0 to 16 do
     begin
         fact(n, res);
         writeln(n, '! = ', res);
-    end
+    end}
 end.

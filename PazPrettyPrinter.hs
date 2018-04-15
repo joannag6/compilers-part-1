@@ -14,6 +14,7 @@ prettyPrint (programname, variables, procedures, compound) = do
   printf "program %s;\n" programname
   ppProgramVariableDecPart variables
   ppProcedureDecPart procedures
+  -- print procedures
   ppCompound compound indentSpacing
   putStr ".\n"
 
@@ -138,8 +139,10 @@ ppProcedureDecPart (p:ps) = do
 -- ASTCompoundStatement
 --------------------------------------------------------------------------------
 data PrevSign =
-  AddOp |
+  AddBinOp |
+  MinBinOp |
   MulOp |
+  MinUnOp |
   NotOp |
   Empty
   deriving (Eq, Show)
@@ -216,61 +219,96 @@ ppFactorList ((mulop, factor):fs) = do
 -- Pretty Print Terms
 ppTerm :: PazParser.ASTTerm -> PrevSign -> IO ()
 ppTerm (factor, []) prev = do
-  ppFactor factor Empty
+  if prev == NotOp || prev == MinUnOp then do
+    ppFactor factor prev
+  else do
+    ppFactor factor Empty
 ppTerm (factor, factors) prev = do
-  ppFactor factor MulOp
+  ppFactor factor prev--MulOp
   ppFactorList factors
 
 -- Pretty Print Term Lists
 ppTermList :: [(ASTAddingOperator, ASTTerm)] -> IO ()
 ppTermList [] = return ()
 ppTermList ((addop, term):ts) = do
-  ppAddingOperator addop
-  ppTerm term AddOp
+  ppAddingOperator addop -- TODO check type of addop - determines if AddBinOp or MinBinOp
+  ppTerm term AddBinOp
   ppTermList ts
 
 -- Pretty Print Simple Expressions
+-- TODO ((Maybe (ASTSign)), ASTTerm, [(ASTAddingOperator, ASTTerm)])
 ppSimpleExpression :: PazParser.ASTSimpleExpression -> PrevSign -> IO ()
 ppSimpleExpression ((Nothing), term, []) prev = do
-  ppTerm term Empty
-ppSimpleExpression ((Just sign), (factor, []), []) prev = do
-  putStr (ppSign sign)
-  case sign of
-    PazParser.SignMinus -> do
-      case factor of
-        ExpressionFactor ef -> do
-          putStr "("
-          ppTerm (factor, []) Empty
-          putStr ")"
-        _ -> do
-          ppTerm (factor, []) Empty
-    _ -> do
-      ppTerm (factor, []) Empty
+  ppTerm term prev
+  -- case prev of
+  --   MinUnOp -> do
+  --     putStr "("
+  --     ppTerm term Empty
+  --     putStr ")"
+  --   _ -> do
+  --     ppTerm term Empty
+
+-- ppSimpleExpression ((Just sign), (factor, []), []) prev = do
+--   putStr (ppSign sign)
+--   case sign of
+--     PazParser.SignMinus -> do
+--       case factor of
+--         ExpressionFactor ef -> do
+--           putStr "("
+--           ppTerm (factor, []) Empty
+--           putStr ")"
+--         _ -> do
+--           ppTerm (factor, []) Empty
+--     _ -> do
+--       ppTerm (factor, []) Empty
 ppSimpleExpression ((Just sign), term, []) prev = do
   putStr (ppSign sign)
-  ppTerm term Empty
+  -- putStr (show prev)
+  -- case prev of
+    -- MinUnOp -> do
+      -- putStr "("
+  case sign of
+    PazParser.SignMinus -> do
+      ppTerm term MinUnOp
+    _ -> do
+      ppTerm term Empty
+      -- putStr ")"
+    -- _ -> do
+    --   case sign of
+    --     PazParser.SignMinus -> do
+    --       ppTerm term MinUnOp
+    --     _ -> do
+    --       ppTerm term Empty
 ppSimpleExpression ((Nothing), term, terms) prev = do
-  if prev == Empty || prev == AddOp
+  if prev == MinUnOp || prev == MulOp || prev == NotOp
     then do
-      ppTerm term AddOp
-      ppTermList terms
-    else do
       putStr "("
-      ppTerm term AddOp
+      ppTerm term AddBinOp -- or Empty?
       ppTermList terms
       putStr ")"
+    else do
+      ppTerm term AddBinOp
+      ppTermList terms
+  -- if prev == Empty || prev == AddBinOp
+  --   then do
+  --     ppTerm term AddBinOp
+  --     ppTermList terms
+  --   else do
+  --     putStr "("
+  --     ppTerm term AddBinOp
+  --     ppTermList terms
+  --     putStr ")"
 ppSimpleExpression ((Just sign), term, terms) prev = do
-  if prev == Empty || prev == AddOp
+  putStr (ppSign sign)
+  if prev == MinUnOp || prev == MulOp || prev == NotOp
     then do
-      putStr (ppSign sign)
-      ppTerm term AddOp
-      ppTermList terms
-    else do
-      putStr (ppSign sign)
       putStr "("
-      ppTerm term AddOp
+      ppTerm term AddBinOp
       ppTermList terms
       putStr ")"
+    else do
+      ppTerm term AddBinOp
+      ppTermList terms
 
 -- Pretty Print Relational Operators
 ppRelOperator :: PazParser.ASTRelationalOperator -> IO ()
@@ -284,28 +322,28 @@ ppRelOperator r =
     ROGreaterThanOrEqual -> putStr " >= "
 
 -- Pretty Print Expressions
+-- TODO simple expression [relational_operator simple_expression]
 ppExpression :: PazParser.ASTExpression -> PrevSign -> IO ()
 ppExpression (simple, Nothing) prev = do
-  if prev == Empty
-    then do
+  -- if prev == Empty
+    -- then do
       ppSimpleExpression simple prev
-    else do
-      putStr "("
-      ppSimpleExpression simple Empty
-      putStr ")"
+    -- else do
+      -- putStr "("
+      -- ppSimpleExpression simple Empty
+      -- putStr ")"
 ppExpression (simple, (Just (relop, simple2))) prev = do
-
-  if prev == Empty
-    then do
+  -- if prev == Empty
+  --   then do
       ppSimpleExpression simple prev
       ppRelOperator relop
       ppSimpleExpression simple2 prev
-    else do
-      putStr "("
-      ppSimpleExpression simple Empty
-      ppRelOperator relop
-      ppSimpleExpression simple2 Empty
-      putStr ")"
+    -- else do
+    --   putStr "("
+    --   ppSimpleExpression simple Empty
+    --   ppRelOperator relop
+    --   ppSimpleExpression simple2 Empty
+    --   putStr ")"
 
 -- Pretty Print Actual Parameters for Procedure Statements
 ppActualParamList :: PazParser.ASTActualParameterList -> IO ()
