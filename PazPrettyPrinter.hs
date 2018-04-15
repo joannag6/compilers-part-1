@@ -139,7 +139,7 @@ ppProcedureDecPart (p:ps) = do
 -- ASTCompoundStatement
 --------------------------------------------------------------------------------
 data PrevSign =
-  AddBinOp |
+  AddOp |
   MinBinOp |
   MulOp |
   MinUnOp |
@@ -224,15 +224,15 @@ ppTerm (factor, []) prev = do
   else do
     ppFactor factor Empty
 ppTerm (factor, factors) prev = do
-  ppFactor factor prev--MulOp
+  ppFactor factor MulOp -- more than one factors, so should be MulOp-ed
   ppFactorList factors
 
 -- Pretty Print Term Lists
 ppTermList :: [(ASTAddingOperator, ASTTerm)] -> IO ()
 ppTermList [] = return ()
 ppTermList ((addop, term):ts) = do
-  ppAddingOperator addop -- TODO check type of addop - determines if AddBinOp or MinBinOp
-  ppTerm term AddBinOp
+  ppAddingOperator addop -- TODO check type of addop - determines if AddOp or MinOp
+  ppTerm term AddOp
   ppTermList ts
 
 -- Pretty Print Simple Expressions
@@ -240,74 +240,33 @@ ppTermList ((addop, term):ts) = do
 ppSimpleExpression :: PazParser.ASTSimpleExpression -> PrevSign -> IO ()
 ppSimpleExpression ((Nothing), term, []) prev = do
   ppTerm term prev
-  -- case prev of
-  --   MinUnOp -> do
-  --     putStr "("
-  --     ppTerm term Empty
-  --     putStr ")"
-  --   _ -> do
-  --     ppTerm term Empty
-
--- ppSimpleExpression ((Just sign), (factor, []), []) prev = do
---   putStr (ppSign sign)
---   case sign of
---     PazParser.SignMinus -> do
---       case factor of
---         ExpressionFactor ef -> do
---           putStr "("
---           ppTerm (factor, []) Empty
---           putStr ")"
---         _ -> do
---           ppTerm (factor, []) Empty
---     _ -> do
---       ppTerm (factor, []) Empty
 ppSimpleExpression ((Just sign), term, []) prev = do
   putStr (ppSign sign)
-  -- putStr (show prev)
-  -- case prev of
-    -- MinUnOp -> do
-      -- putStr "("
   case sign of
     PazParser.SignMinus -> do
       ppTerm term MinUnOp
     _ -> do
       ppTerm term Empty
-      -- putStr ")"
-    -- _ -> do
-    --   case sign of
-    --     PazParser.SignMinus -> do
-    --       ppTerm term MinUnOp
-    --     _ -> do
-    --       ppTerm term Empty
 ppSimpleExpression ((Nothing), term, terms) prev = do
   if prev == MinUnOp || prev == MulOp || prev == NotOp
     then do
       putStr "("
-      ppTerm term AddBinOp -- or Empty?
+      ppTerm term AddOp -- or Empty?
       ppTermList terms
       putStr ")"
     else do
-      ppTerm term AddBinOp
+      ppTerm term AddOp
       ppTermList terms
-  -- if prev == Empty || prev == AddBinOp
-  --   then do
-  --     ppTerm term AddBinOp
-  --     ppTermList terms
-  --   else do
-  --     putStr "("
-  --     ppTerm term AddBinOp
-  --     ppTermList terms
-  --     putStr ")"
 ppSimpleExpression ((Just sign), term, terms) prev = do
   putStr (ppSign sign)
   if prev == MinUnOp || prev == MulOp || prev == NotOp
     then do
       putStr "("
-      ppTerm term AddBinOp
+      ppTerm term AddOp
       ppTermList terms
       putStr ")"
     else do
-      ppTerm term AddBinOp
+      ppTerm term AddOp
       ppTermList terms
 
 -- Pretty Print Relational Operators
