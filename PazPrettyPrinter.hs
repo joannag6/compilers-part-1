@@ -222,10 +222,7 @@ ppTerm (factor, []) prev = do
   if prev == MinUnOp || prev == MinBinOp then do
     ppFactor factor prev
   else do
-    if prev == NotOp then do
-      ppFactor factor prev
-    else do
-      ppFactor factor Empty
+    ppFactor factor prev
 ppTerm (factor, factors) prev = do
   if prev == NotOp then do
     putStr "("
@@ -275,14 +272,15 @@ ppSimpleExpression ((Nothing), term, terms) prev = do
       ppTerm term prev
       ppTermList terms
 ppSimpleExpression ((Just sign), term, terms) prev = do
-  putStr (ppSign sign)
   if prev == MinUnOp || prev == MulOp || prev == NotOp || prev == MinBinOp
     then do
       putStr "("
+      putStr (ppSign sign)
       ppTerm term Empty
       ppTermList terms
       putStr ")"
     else do
+      putStr (ppSign sign)
       ppTerm term prev
       ppTermList terms
 
@@ -311,16 +309,16 @@ ppExpression (simple, Nothing) prev = do
       -- ppSimpleExpression simple Empty
       -- putStr ")"
 ppExpression (simple, (Just (relop, simple2))) prev = do
-  if prev == NotOp then do
+  if prev == Empty then do
+    ppSimpleExpression simple prev
+    ppRelOperator relop
+    ppSimpleExpression simple2 prev
+  else do
     putStr "("
     ppSimpleExpression simple Empty
     ppRelOperator relop
     ppSimpleExpression simple2 Empty
     putStr ")"
-  else do
-    ppSimpleExpression simple prev
-    ppRelOperator relop
-    ppSimpleExpression simple2 prev
     -- else do
     --   putStr "("
     --   ppSimpleExpression simple Empty
