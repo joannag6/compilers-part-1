@@ -219,7 +219,7 @@ ppFactorList ((mulop, factor):fs) = do
 -- Pretty Print Terms
 ppTerm :: PazParser.ASTTerm -> PrevSign -> IO ()
 ppTerm (factor, []) prev = do
-  if prev == NotOp || prev == MinUnOp then do
+  if prev == NotOp || prev == MinUnOp || prev == MinBinOp then do
     ppFactor factor prev
   else do
     ppFactor factor Empty
@@ -248,27 +248,27 @@ ppSimpleExpression ((Just sign), term, []) prev = do
     PazParser.SignMinus -> do
       ppTerm term MinUnOp
     _ -> do
-      ppTerm term Empty
+      ppTerm term prev
 ppSimpleExpression ((Nothing), term, terms) prev = do
   if prev == MinUnOp || prev == MulOp || prev == NotOp || prev == MinBinOp
     then do
       putStr "("
-      ppTerm term AddOp -- or Empty?
+      ppTerm term Empty
       ppTermList terms
       putStr ")"
     else do
-      ppTerm term AddOp
+      ppTerm term prev
       ppTermList terms
 ppSimpleExpression ((Just sign), term, terms) prev = do
   putStr (ppSign sign)
   if prev == MinUnOp || prev == MulOp || prev == NotOp || prev == MinBinOp
     then do
       putStr "("
-      ppTerm term AddOp
+      ppTerm term Empty
       ppTermList terms
       putStr ")"
     else do
-      ppTerm term AddOp
+      ppTerm term prev
       ppTermList terms
 
 -- Pretty Print Relational Operators
